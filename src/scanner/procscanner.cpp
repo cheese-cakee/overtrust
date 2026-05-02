@@ -70,29 +70,22 @@ static std::string read_file(const std::string& path) {
     return ss.str();
 }
 
-// /proc/pid/cmdline uses NUL separators — replace with spaces
 static std::string read_cmdline(uint32_t pid) {
     std::string raw = read_file("/proc/" + std::to_string(pid) + "/cmdline");
-    for (char& c : raw) {
-        if (c == '\0') c = ' ';
-    }
-    // trim trailing space
+    for (char& c : raw) if (c == '\0') c = ' ';
     while (!raw.empty() && raw.back() == ' ') raw.pop_back();
     return raw;
 }
 
-static uint64_t parse_hex_field(const std::string& status,
-                                 const std::string& field) {
+static uint64_t parse_hex_field(const std::string& status, const std::string& field) {
     auto pos = status.find(field);
     if (pos == std::string::npos) return 0;
     pos += field.size();
     while (pos < status.size() && std::isspace(status[pos])) ++pos;
     std::string hex;
-    while (pos < status.size() && std::isxdigit(status[pos]))
-        hex += status[pos++];
+    while (pos < status.size() && std::isxdigit(status[pos])) hex += status[pos++];
     if (hex.empty()) return 0;
-    try { return std::stoull(hex, nullptr, 16); }
-    catch (...) { return 0; }
+    try { return std::stoull(hex, nullptr, 16); } catch (...) { return 0; }
 }
 
 static uint64_t parse_ns_inode(uint32_t pid, const char* ns_name) {
@@ -100,16 +93,12 @@ static uint64_t parse_ns_inode(uint32_t pid, const char* ns_name) {
     std::error_code ec;
     fs::path target = fs::read_symlink(link, ec);
     if (ec) return 0;
-    // Target looks like "pid:[1234567]"
     std::string s = target.string();
-    auto lb = s.find('[');
-    auto rb = s.find(']');
+    auto lb = s.find('['), rb = s.find(']');
     if (lb == std::string::npos || rb == std::string::npos) return 0;
-    try { return std::stoull(s.substr(lb + 1, rb - lb - 1)); }
-    catch (...) { return 0; }
+    try { return std::stoull(s.substr(lb + 1, rb - lb - 1)); } catch (...) { return 0; }
 }
 
-// Sensitive path patterns to check in open FDs
 static bool fd_path_is_sensitive(const std::string& path) {
     static const std::vector<std::string> SENSITIVE = {
         "/.ssh/", "/.aws/", "/.gnupg/", "/credentials",
@@ -121,13 +110,36 @@ static bool fd_path_is_sensitive(const std::string& path) {
     return false;
 }
 
+// Well-known system processes to skip — they legitimately hold all caps
+static bool is_system_process(const ProcessInfo& p) {
+    static const std::vector<std::string> SYSTEM_NAMES = {
+        "systemd", "init", "kthreadd", "ksoftirqd", "kworker",
+        "migration", "rcu_", "watchdog", "kdevtmpfs", "kauditd",
+        "khungtaskd", "oom_reaper", "writeback", "kcompactd",
+        "ksmd", "khugepaged", "kintegrityd", "kblockd", "tpm_dev_wq",
+        "edac-poller", "devfreq_wq", "kswapd", "irq/", "smpboot",
+        "idle_inject", "kstrp", "zswap-shrink", "kthrotld",
+        "ipv6_addrconf", "kmemleak", "jbd2", "ext4", "loop",
+        "scsi_eh", "usb-storage", "bioset",
+    };
+    // PID 1 and 2 are always system
+    if (p.pid <= 2) return true;
+    // Kernel threads have no cmdline
+    if (p.cmdline.empty() && p.name[0] == 'k') return true;
+
+    std::string lower = p.name;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    for (auto& sn : SYSTEM_NAMES)
+        if (lower.find(sn) != std::string::npos) return true;
+    return false;
+}
+
 // ── list_pids ─────────────────────────────────────────────────────────────────
 
 std::vector<uint32_t> list_pids() {
     std::vector<uint32_t> pids;
     DIR* d = opendir("/proc");
     if (!d) return pids;
-
     struct dirent* ent;
     while ((ent = readdir(d)) != nullptr) {
         if (ent->d_type != DT_DIR && ent->d_type != DT_UNKNOWN) continue;
@@ -147,24 +159,19 @@ std::vector<uint32_t> list_pids() {
 ProcessInfo read_process(uint32_t pid) {
     ProcessInfo p;
     p.pid = pid;
-
     std::string base = "/proc/" + std::to_string(pid) + "/";
 
-    // comm
     p.name = read_file(base + "comm");
     while (!p.name.empty() && (p.name.back() == '\n' || p.name.back() == '\r'))
         p.name.pop_back();
 
-    // cmdline
     p.cmdline = read_cmdline(pid);
 
-    // status
     std::string status = read_file(base + "status");
     p.cap_eff = parse_hex_field(status, "CapEff:");
     p.cap_prm = parse_hex_field(status, "CapPrm:");
     p.cap_bnd = parse_hex_field(status, "CapBnd:");
 
-    // Uid (first real uid)
     {
         auto pos = status.find("Uid:");
         if (pos != std::string::npos) {
@@ -172,8 +179,6 @@ ProcessInfo read_process(uint32_t pid) {
             ss >> p.uid;
         }
     }
-
-    // Seccomp
     {
         auto pos = status.find("Seccomp:");
         if (pos != std::string::npos) {
@@ -182,7 +187,6 @@ ProcessInfo read_process(uint32_t pid) {
         }
     }
 
-    // Decode capabilities
     for (std::size_t i = 0; i < CAPABILITY_TABLE_SIZE; ++i) {
         auto& ce = CAPABILITY_TABLE[i];
         if (p.cap_eff & (1ULL << ce.bit)) {
@@ -191,13 +195,11 @@ ProcessInfo read_process(uint32_t pid) {
         }
     }
 
-    // Namespace inodes
     p.ns_pid  = parse_ns_inode(pid, "pid");
     p.ns_net  = parse_ns_inode(pid, "net");
     p.ns_mnt  = parse_ns_inode(pid, "mnt");
     p.ns_user = parse_ns_inode(pid, "user");
 
-    // Open FDs — scan for sensitive paths
     std::string fd_dir = base + "fd";
     std::error_code ec;
     for (auto& entry : fs::directory_iterator(fd_dir, ec)) {
@@ -222,7 +224,6 @@ bool is_ai_tool(const ProcessInfo& p) {
     std::string lower_cmd  = p.cmdline;
     std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(), ::tolower);
     std::transform(lower_cmd.begin(),  lower_cmd.end(),  lower_cmd.begin(),  ::tolower);
-
     for (auto& n : AI_PROCESS_NAMES) {
         if (lower_name.find(n) != std::string::npos) return true;
         if (lower_cmd.find(n)  != std::string::npos) return true;
@@ -234,8 +235,11 @@ bool is_ai_tool(const ProcessInfo& p) {
 
 std::vector<Finding> score_process(const ProcessInfo& p) {
     std::vector<Finding> out;
-    static int counter = 5000;
 
+    // Skip kernel/system processes — they legitimately hold elevated caps
+    if (is_system_process(p)) return out;
+
+    static int counter = 5000;
     auto add = [&](const char* rule, Severity sev, double score,
                    std::string msg, std::string ev = "") {
         Finding f;
@@ -251,31 +255,30 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
 
     std::string proc_label = p.name + " (PID " + std::to_string(p.pid) + ")";
 
-    // Dangerous capabilities
-    if (!p.dangerous_caps.empty()) {
+    // Only flag dangerous caps on non-root user processes — root owning caps is expected
+    if (!p.dangerous_caps.empty() && p.uid >= 1000) {
         std::string caps;
         for (auto& c : p.dangerous_caps) caps += c + " ";
-        Severity sev = (p.dangerous_caps.size() >= 3) ? Severity::Critical : Severity::High;
-        add("PROC-001", sev, 8.0 + p.dangerous_caps.size() * 0.5,
-            proc_label + " has dangerous capabilities",
+        add("PROC-001", Severity::High, 7.5,
+            proc_label + " (user process) has elevated capabilities",
             "CapEff: " + caps);
     }
 
-    // No seccomp filter
-    if (p.seccomp == 0 && p.uid == 0) {
-        add("PROC-002", Severity::High, 7.0,
+    // Seccomp off on a user process running as root — flag it
+    if (p.seccomp == 0 && p.uid == 0 && p.pid > 100) {
+        add("PROC-002", Severity::Medium, 5.5,
             proc_label + " runs as root with no seccomp filter",
             "Seccomp: 0, UID: 0");
     }
 
-    // Open sensitive files
+    // Sensitive file open — always flag regardless of uid
     for (auto& fd_path : p.sensitive_fds) {
-        add("PROC-003", Severity::Critical, 9.0,
+        add("PROC-003", Severity::High, 7.0,
             proc_label + " has sensitive file open",
             "fd → " + fd_path);
     }
 
-    // AI tool with broad file access (heuristic: >100 open FDs is suspicious)
+    // AI tool touching secrets — highest priority finding
     if (is_ai_tool(p) && !p.sensitive_fds.empty()) {
         add("PROC-004", Severity::Critical, 9.5,
             "AI tool " + proc_label + " is reading sensitive files",
@@ -291,7 +294,7 @@ std::vector<Finding> scan_processes() {
     std::vector<Finding> results;
     for (uint32_t pid : list_pids()) {
         ProcessInfo info = read_process(pid);
-        if (info.name.empty()) continue; // process died
+        if (info.name.empty()) continue;
         auto findings = score_process(info);
         results.insert(results.end(), findings.begin(), findings.end());
     }

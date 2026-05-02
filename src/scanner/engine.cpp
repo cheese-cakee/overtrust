@@ -5,7 +5,6 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
-#include <chrono>
 
 #include "overtrust/classifier.hpp"
 #include "overtrust/manifest.hpp"
@@ -15,7 +14,6 @@
 
 namespace overtrust {
 
-// Read a text file up to max_bytes (default 512KB — skip giant files)
 static std::string read_text_file(const fs::path& path,
                                    std::size_t max_bytes = 512 * 1024) {
     std::ifstream f(path, std::ios::binary);
@@ -25,8 +23,6 @@ static std::string read_text_file(const fs::path& path,
     content.resize(static_cast<std::size_t>(f.gcount()));
     return content;
 }
-
-// ── ScanEngine::run ───────────────────────────────────────────────────────────
 
 void ScanEngine::run() {
     running_.store(true);
@@ -42,30 +38,20 @@ void ScanEngine::run() {
         all_findings.push_back(std::move(f));
     };
 
-    auto log = [&](const std::string& msg) {
-        if (callbacks_.on_file) {
-            // Reuse on_file callback just for logging — pass a dummy path
-            // We'll pass the actual path instead
-        }
-        (void)msg;
-    };
-    (void)log;
-
-    // ── Phase 1: Walk filesystem ─────────────────────────────────────────────
+    // ── Phase 1: Walk filesystem ──────────────────────────────────────────────
     std::vector<fs::path> files;
     walk_directory(fs::path(target_), files, total);
 
     if (callbacks_.on_progress)
         callbacks_.on_progress(0, total.load());
 
-    // ── Phase 2: Classify + scan each file ──────────────────────────────────
+    // ── Phase 2: Classify + scan each file ───────────────────────────────────
     for (auto& path : files) {
         if (stop_.load()) break;
 
-        FileKind kind = classify_file(path);
-        std::string path_str = path.string();
+        FileKind kind    = classify_file(path);
+        std::string pstr = path.string();
 
-        // Log the file
         if (callbacks_.on_file) callbacks_.on_file(path);
 
         if (!is_interesting(kind)) {
@@ -75,45 +61,43 @@ void ScanEngine::run() {
             continue;
         }
 
-        // ── Manifest parsing ─────────────────────────────────────────────
         switch (kind) {
             case FileKind::VsCodeExtension: {
                 auto m = parse_vscode_manifest(path);
-                for (auto& f : score_vscode_ext(m, path_str)) emit(f);
+                for (auto& f : score_vscode_ext(m, pstr)) emit(f);
                 break;
             }
             case FileKind::NpmPackageJson: {
                 auto m = parse_npm_manifest(path);
-                for (auto& f : score_npm_pkg(m, path_str)) emit(f);
+                for (auto& f : score_npm_pkg(m, pstr)) emit(f);
                 break;
             }
             case FileKind::Dockerfile: {
                 auto m = parse_dockerfile(path);
-                for (auto& f : score_dockerfile(m, path_str)) emit(f);
+                for (auto& f : score_dockerfile(m, pstr)) emit(f);
                 break;
             }
             case FileKind::SshKey: {
-                // Any accessible SSH private key is immediately a finding
                 Finding f;
-                f.id       = "F-ssh-" + path_str.substr(path_str.rfind('/') + 1);
+                f.id       = "F-ssh-" + pstr.substr(pstr.rfind('/') + 1);
                 f.rule_id  = "FILE-001";
                 f.severity = Severity::High;
-                f.file     = path_str;
-                f.message  = "SSH private key found: " + path_str.substr(path_str.rfind('/') + 1);
+                f.file     = pstr;
+                f.message  = "SSH private key: " + pstr.substr(pstr.rfind('/') + 1);
                 f.score    = 7.5;
-                f.evidence = "File in indexed directory";
+                f.evidence = "Private key in indexed directory";
                 emit(f);
                 break;
             }
             case FileKind::AwsCredentials: {
                 Finding f;
-                f.id       = "F-aws-" + path_str;
+                f.id       = "F-aws-creds";
                 f.rule_id  = "FILE-002";
                 f.severity = Severity::Critical;
-                f.file     = path_str;
+                f.file     = pstr;
                 f.message  = "AWS credentials file found";
                 f.score    = 9.0;
-                f.evidence = "~/.aws/credentials accessible to all processes in same namespace";
+                f.evidence = "All processes in this namespace can read this file";
                 emit(f);
                 break;
             }
@@ -121,15 +105,15 @@ void ScanEngine::run() {
                 break;
         }
 
-        // ── Secret detection (text files) ─────────────────────────────────
-        if (kind == FileKind::TextFile || kind == FileKind::DotEnv ||
-            kind == FileKind::ShellScript || kind == FileKind::SshKey ||
+        // Secret detection on text files
+        if (kind == FileKind::TextFile   || kind == FileKind::DotEnv     ||
+            kind == FileKind::ShellScript || kind == FileKind::SshKey    ||
             kind == FileKind::AwsCredentials || kind == FileKind::GitConfig)
         {
             std::string content = read_text_file(path);
             if (!content.empty()) {
-                auto secrets = scan_for_secrets(content, path_str);
-                for (auto& s : secrets) emit(secret_to_finding(s, path_str));
+                auto secrets = scan_for_secrets(content, pstr);
+                for (auto& s : secrets) emit(secret_to_finding(s, pstr));
             }
         }
 
@@ -141,11 +125,8 @@ void ScanEngine::run() {
     if (callbacks_.on_progress)
         callbacks_.on_progress(total.load(), total.load());
 
-    // ── Phase 3: Process scan ────────────────────────────────────────────────
-    {
-        auto proc_findings = scan_processes();
-        for (auto& f : proc_findings) emit(f);
-    }
+    // ── Phase 3: Process scan ─────────────────────────────────────────────────
+    for (auto& f : scan_processes()) emit(f);
 
     // ── Phase 4: Build trust graph + compute score ────────────────────────────
     int trust_score;

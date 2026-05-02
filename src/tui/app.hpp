@@ -139,9 +139,10 @@ public:
             // ── Center panel: graph / status ───────────────────────────
             Element center_panel;
             if (show_graph) {
+                // Canvas size: account for borders/panels; reasonable default
                 center_panel = window(
                     text(" Trust Graph [v=toggle] "),
-                    render_graph_visual(findings, 80, 30)
+                    render_graph_visual(findings, 100, 40)
                 );
             } else {
                 center_panel = window(
@@ -213,8 +214,8 @@ public:
                     screen.ExitLoopClosure()();
                     return true;
                 }
-                // Any other key dismisses splash
-                if (ev.is_character() || ev == Event::Return) {
+                // Only real keypresses dismiss splash — not the 100ms refresh tick
+                if (ev != Event::Custom && (ev.is_character() || ev == Event::Return)) {
                     show_splash = false;
                     return true;
                 }

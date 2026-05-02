@@ -308,19 +308,27 @@ TrustGraph build_trust_graph(const std::vector<Finding>& findings) {
 // ── compute_trust_score ───────────────────────────────────────────────────────
 
 int compute_trust_score(const TrustGraph& g) {
-    if (g.node_count() <= 1) return 100; // only root node
+    if (g.node_count() <= 1) return 100;
 
-    double total_risk = 0.0;
-    double max_possible = 0.0;
+    // Collect unique findings (deduplicate by node id)
+    double max_single  = 0.0;
+    double crit_total  = 0.0;
+    int    crit_count  = 0;
+    int    high_count  = 0;
 
     for (auto& node : g.nodes()) {
         if (node.id == "system" || node.id == "secrets:pool") continue;
-        total_risk  += node.risk_score;
-        max_possible = std::max(max_possible, node.risk_score);
+        max_single = std::max(max_single, node.risk_score);
+        if (node.severity == Severity::Critical) { crit_total += node.risk_score; ++crit_count; }
+        if (node.severity == Severity::High)     { ++high_count; }
     }
 
-    // Score = 100 - clamped(total_risk / scaling_factor)
-    double penalty = total_risk * 2.0; // tune sensitivity
+    // Base penalty: worst single finding drives score down the most
+    // Additional penalty: diminishing returns for more findings
+    double penalty = max_single * 5.0                      // worst finding: up to -50
+                   + std::min(crit_count * 3.0,  30.0)     // criticals: up to -30
+                   + std::min(high_count * 1.5,  20.0);    // highs: up to -20
+
     int score = 100 - static_cast<int>(std::min(penalty, 100.0));
     return std::max(0, score);
 }
