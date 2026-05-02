@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 #include "tui/colors.hpp"
 #include "tui/splash.hpp"
 #include "tui/widgets.hpp"
 #include "tui/graph_view.hpp"
 
-namespace sentinel::tui {
+namespace overtrust::tui {
 
 using namespace ftxui;
 
@@ -103,7 +103,7 @@ public:
 
             // ── Top bar ────────────────────────────────────────────────
             auto top_bar = hbox({
-                text(" SENTINEL ") | bold | color(COLOR_ACCENT),
+                text(" OVERTRUST ") | bold | color(COLOR_ACCENT),
                 text("│") | dim,
                 trust_score_bar(score, scanning),
                 filler(),
@@ -298,4 +298,4 @@ private:
     ScreenInteractive* screen_ = nullptr;
 };
 
-} // namespace sentinel::tui
+} // namespace overtrust::tui

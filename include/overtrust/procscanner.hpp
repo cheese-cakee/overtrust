@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 // ── Linux capability names (subset — most security-relevant) ─────────────────
 
@@ -64,4 +64,4 @@ std::vector<Finding> score_process(const ProcessInfo& p);
 // Scan all processes, return findings
 std::vector<Finding> scan_processes();
 
-} // namespace sentinel
+} // namespace overtrust

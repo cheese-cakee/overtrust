@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 
-namespace sentinel {
+namespace overtrust {
 
 namespace fs = std::filesystem;
 
@@ -43,4 +43,4 @@ std::string read_magic(const fs::path& path, std::size_t n = 8);
 // True if this FileKind warrants a deeper scan (parsing, secret detection)
 bool is_interesting(FileKind k);
 
-} // namespace sentinel
+} // namespace overtrust

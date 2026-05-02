@@ -2,8 +2,8 @@
 #include <string>
 #include <thread>
 
-#include "sentinel/version.hpp"
-#include "sentinel/engine.hpp"
+#include "overtrust/version.hpp"
+#include "overtrust/engine.hpp"
 #include "tui/app.hpp"
 
 static void print_usage(const char* prog) {
@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (arg == "--version") {
-            std::cout << sentinel::APP_NAME << " " << sentinel::VERSION << "\n";
+            std::cout << overtrust::APP_NAME << " " << overtrust::VERSION << "\n";
             return 0;
         }
         if (arg == "--no-tui") {
@@ -44,16 +44,16 @@ int main(int argc, char** argv) {
     }
 
     // ── TUI mode ─────────────────────────────────────────────────────────────
-    sentinel::tui::App app(target);
+    overtrust::tui::App app(target);
 
     // Build scan callbacks that feed the TUI
-    sentinel::ScanCallbacks cbs;
+    overtrust::ScanCallbacks cbs;
 
     cbs.on_file = [&](const std::filesystem::path& p) {
         app.push_log(p.filename().string());
     };
 
-    cbs.on_finding = [&](sentinel::Finding f) {
+    cbs.on_finding = [&](overtrust::Finding f) {
         app.push_finding(std::move(f));
     };
 
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
         app.set_complete(trust_score);
     };
 
-    sentinel::ScanEngine engine(target, std::move(cbs));
+    overtrust::ScanEngine engine(target, std::move(cbs));
 
     // Start scan right away; TUI will show splash until user presses a key
     app.start_scanning();

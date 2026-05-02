@@ -1,9 +1,9 @@
 #pragma once
 
 #include <ftxui/screen/color.hpp>
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 
-namespace sentinel::tui {
+namespace overtrust::tui {
 
 using ftxui::Color;
 
@@ -35,4 +35,4 @@ inline Color score_color(int score) {
     return COLOR_CRITICAL;
 }
 
-} // namespace sentinel::tui
+} // namespace overtrust::tui

@@ -1,4 +1,4 @@
-#include "sentinel/classifier.hpp"
+#include "overtrust/classifier.hpp"
 
 #include <fstream>
 #include <algorithm>
@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-namespace sentinel {
+namespace overtrust {
 
 // ── Magic byte prefixes ──────────────────────────────────────────────────────
 
@@ -160,4 +160,4 @@ bool is_interesting(FileKind k) {
     }
 }
 
-} // namespace sentinel
+} // namespace overtrust

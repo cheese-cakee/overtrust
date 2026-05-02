@@ -1,4 +1,4 @@
-#include "sentinel/secrets.hpp"
+#include "overtrust/secrets.hpp"
 
 #include <regex>
 #include <sstream>
@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-namespace sentinel {
+namespace overtrust {
 
 // ── Shannon entropy ───────────────────────────────────────────────────────────
 
@@ -216,4 +216,4 @@ Finding secret_to_finding(const SecretMatch& m, const std::string& file) {
     return f;
 }
 
-} // namespace sentinel
+} // namespace overtrust

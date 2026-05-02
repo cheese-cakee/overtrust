@@ -2,10 +2,10 @@
 
 #include <string>
 #include <vector>
-#include "sentinel/types.hpp"
-#include "sentinel/graph.hpp"
+#include "overtrust/types.hpp"
+#include "overtrust/graph.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 // Serialize findings + graph to a JSON report file
 bool write_json_report(const std::string& output_path,
@@ -14,4 +14,4 @@ bool write_json_report(const std::string& output_path,
                        int trust_score,
                        const std::string& target);
 
-} // namespace sentinel
+} // namespace overtrust

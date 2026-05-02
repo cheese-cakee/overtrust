@@ -6,9 +6,9 @@
 #include <unordered_set>
 #include <functional>
 
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 // ── Node ─────────────────────────────────────────────────────────────────────
 
@@ -112,4 +112,4 @@ TrustGraph build_trust_graph(const std::vector<Finding>& findings);
 // Compute trust score 0-100 from graph
 int compute_trust_score(const TrustGraph& g);
 
-} // namespace sentinel
+} // namespace overtrust

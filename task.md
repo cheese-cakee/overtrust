@@ -1,4 +1,4 @@
-# Sentinel Build Plan
+# Overtrust Build Plan
 
 ## Stack
 - C++17/20 + CMake
@@ -19,7 +19,7 @@
 ### Commit 2: TUI shell + layout
 - Full 5-panel layout (top bar, left log, center graph, right findings, bottom detail)
 - Keyboard input: q quit, ? help, arrows navigate, v toggle view
-- Splash screen with ASCII art "SENTINEL"
+- Splash screen with ASCII art "OVERTRUST"
 - Placeholder data in all panels
 
 ### Commit 3: Filesystem walker

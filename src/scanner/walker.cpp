@@ -1,8 +1,8 @@
-#include "sentinel/scanner.hpp"
+#include "overtrust/scanner.hpp"
 
 #include <system_error>
 
-namespace sentinel {
+namespace overtrust {
 
 void walk_directory(const fs::path& root,
                     std::vector<fs::path>& out,
@@ -48,4 +48,4 @@ void walk_directory(const fs::path& root,
     }
 }
 
-} // namespace sentinel
+} // namespace overtrust

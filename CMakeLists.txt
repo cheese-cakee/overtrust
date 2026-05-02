@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(sentinel VERSION 0.1.0 LANGUAGES CXX)
+project(overtrust VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -37,19 +37,19 @@ set(YAML_CPP_BUILD_TOOLS  OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(yaml-cpp)
 
 # ── Sources ───────────────────────────────────────────────────────────────────
-file(GLOB_RECURSE SENTINEL_SOURCES
+file(GLOB_RECURSE OVERTRUST_SOURCES
   "src/*.cpp"
   "src/**/*.cpp"
 )
 
-add_executable(sentinel ${SENTINEL_SOURCES})
+add_executable(overtrust ${OVERTRUST_SOURCES})
 
-target_include_directories(sentinel PRIVATE
+target_include_directories(overtrust PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(sentinel PRIVATE
+target_link_libraries(overtrust PRIVATE
   ftxui::screen
   ftxui::dom
   ftxui::component
@@ -59,7 +59,7 @@ target_link_libraries(sentinel PRIVATE
   stdc++fs
 )
 
-target_compile_options(sentinel PRIVATE
+target_compile_options(overtrust PRIVATE
   -Wall
   -Wextra
   -Wpedantic
@@ -67,6 +67,6 @@ target_compile_options(sentinel PRIVATE
   $<$<CONFIG:Debug>:-g -O0 -fsanitize=address>
 )
 
-target_link_options(sentinel PRIVATE
+target_link_options(overtrust PRIVATE
   $<$<CONFIG:Debug>:-fsanitize=address>
 )

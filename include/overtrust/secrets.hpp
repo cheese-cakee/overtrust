@@ -2,9 +2,9 @@
 
 #include <string>
 #include <vector>
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 // ── Secret match ─────────────────────────────────────────────────────────────
 
@@ -29,4 +29,4 @@ Finding secret_to_finding(const SecretMatch& m, const std::string& file);
 // Shannon entropy of a byte span [0, 8]
 double shannon_entropy(const std::string& s);
 
-} // namespace sentinel
+} // namespace overtrust

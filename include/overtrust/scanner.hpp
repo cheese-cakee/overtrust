@@ -6,9 +6,9 @@
 #include <vector>
 #include <atomic>
 
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 namespace fs = std::filesystem;
 
@@ -57,4 +57,4 @@ void walk_directory(const fs::path& root,
                     std::vector<fs::path>& out,
                     std::atomic<std::size_t>& total);
 
-} // namespace sentinel
+} // namespace overtrust

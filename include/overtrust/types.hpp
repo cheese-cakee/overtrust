@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstdint>
 
-namespace sentinel {
+namespace overtrust {
 
 // ── Severity ────────────────────────────────────────────────────────────────
 
@@ -69,4 +69,4 @@ struct ScanSummary {
     int         trust_score  = 100;
 };
 
-} // namespace sentinel
+} // namespace overtrust

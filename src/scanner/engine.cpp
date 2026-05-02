@@ -1,4 +1,4 @@
-#include "sentinel/engine.hpp"
+#include "overtrust/engine.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -7,13 +7,13 @@
 #include <mutex>
 #include <chrono>
 
-#include "sentinel/classifier.hpp"
-#include "sentinel/manifest.hpp"
-#include "sentinel/secrets.hpp"
-#include "sentinel/procscanner.hpp"
-#include "sentinel/graph.hpp"
+#include "overtrust/classifier.hpp"
+#include "overtrust/manifest.hpp"
+#include "overtrust/secrets.hpp"
+#include "overtrust/procscanner.hpp"
+#include "overtrust/graph.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 // Read a text file up to max_bytes (default 512KB — skip giant files)
 static std::string read_text_file(const fs::path& path,
@@ -159,4 +159,4 @@ void ScanEngine::run() {
     running_.store(false);
 }
 
-} // namespace sentinel
+} // namespace overtrust

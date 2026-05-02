@@ -3,7 +3,7 @@
 #include <ftxui/dom/elements.hpp>
 #include <string>
 
-namespace sentinel::tui {
+namespace overtrust::tui {
 
 // Big ASCII art for the splash / top-bar logo
 inline const char* BANNER[] = {
@@ -41,4 +41,4 @@ inline ftxui::Element render_splash() {
     return vbox(std::move(lines)) | border | color(Color::Cyan);
 }
 
-} // namespace sentinel::tui
+} // namespace overtrust::tui

@@ -1,4 +1,4 @@
-#include "sentinel/procscanner.hpp"
+#include "overtrust/procscanner.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -8,7 +8,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-namespace sentinel {
+namespace overtrust {
 
 namespace fs = std::filesystem;
 
@@ -298,4 +298,4 @@ std::vector<Finding> scan_processes() {
     return results;
 }
 
-} // namespace sentinel
+} // namespace overtrust

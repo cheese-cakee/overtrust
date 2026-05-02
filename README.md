@@ -1,4 +1,4 @@
-# Sentinel
+# Overtrust
 
 > AI-era workstation security scanner. Deterministic. No LLMs.
 
@@ -11,7 +11,7 @@
  ╚══════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝
 ```
 
-Sentinel audits what your AI tools, IDE extensions, npm packages, and Docker
+Overtrust audits what your AI tools, IDE extensions, npm packages, and Docker
 containers can see on your system — with zero network calls, zero token cost,
 100% reproducible results, and a beautiful terminal UI.
 
@@ -27,20 +27,20 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
 
 # Scan your home directory
-./build/sentinel
+./build/overtrust
 
 # Scan a specific directory
-./build/sentinel /path/to/project
+./build/overtrust /path/to/project
 
 # Try the included demo fixtures
-./build/sentinel demo/
+./build/overtrust demo/
 ```
 
 ---
 
 ## What It Detects
 
-| Category | What Sentinel Finds |
+| Category | What Overtrust Finds |
 |----------|---------------------|
 | **IDE Extensions** | Terminal access, auth providers, debug adapters, always-on activation |
 | **npm Packages** | Preinstall/postinstall scripts, curl\|bash patterns |
@@ -55,7 +55,7 @@ cmake --build build -j$(nproc)
 ## Interface
 
 ```
-┌─ SENTINEL ─────────────────────────── Trust Score: 34/100 [████░░░░] CRITICAL ─┐
+┌─ OVERTRUST ─────────────────────────── Trust Score: 34/100 [████░░░░] CRITICAL ─┐
 │                                                                                  │
 ├─ Scan Log ──────┬─ Overview ──────────────────┬─ Findings (8) ──────────────────┤
 │ .env            │   [SYSTEM]                  │ [CRIT] AWS credentials file [9] │
@@ -108,7 +108,7 @@ src/
 │   └── graph_view.hpp        Compact tree + visual canvas graph renderers
 └── report.cpp                JSON report export
 
-include/sentinel/
+include/overtrust/
 ├── types.hpp                 Finding, ScanState, Severity
 ├── scanner.hpp               ScanCallbacks, walk_directory
 ├── classifier.hpp            FileKind, classify_file
@@ -154,7 +154,7 @@ Score = `100 - clamp(Σ(finding.score) × 2, 0, 100)`
 ## Demo Fixtures
 
 ```bash
-./build/sentinel demo/
+./build/overtrust demo/
 ```
 
 The `demo/` directory contains intentionally bad configs:

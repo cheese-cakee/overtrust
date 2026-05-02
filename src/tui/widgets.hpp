@@ -3,10 +3,10 @@
 #include <ftxui/dom/elements.hpp>
 #include <string>
 #include <cmath>
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 #include "tui/colors.hpp"
 
-namespace sentinel::tui {
+namespace overtrust::tui {
 
 using namespace ftxui;
 
@@ -118,4 +118,4 @@ inline Element help_overlay() {
     }) | border | color(COLOR_ACCENT);
 }
 
-} // namespace sentinel::tui
+} // namespace overtrust::tui

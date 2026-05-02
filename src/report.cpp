@@ -1,4 +1,4 @@
-#include "sentinel/report.hpp"
+#include "overtrust/report.hpp"
 
 #include <fstream>
 #include <chrono>
@@ -8,7 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace sentinel {
+namespace overtrust {
 
 using json = nlohmann::json;
 
@@ -109,4 +109,4 @@ bool write_json_report(const std::string& output_path,
     return true;
 }
 
-} // namespace sentinel
+} // namespace overtrust

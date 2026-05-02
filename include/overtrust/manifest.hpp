@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 namespace fs = std::filesystem;
 
@@ -78,4 +78,4 @@ std::vector<Finding> score_vscode_ext(const VsCodeExtManifest& m, const std::str
 std::vector<Finding> score_npm_pkg(const NpmManifest& m, const std::string& file);
 std::vector<Finding> score_dockerfile(const DockerfileManifest& m, const std::string& file);
 
-} // namespace sentinel
+} // namespace overtrust

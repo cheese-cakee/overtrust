@@ -7,10 +7,10 @@
 #include <atomic>
 #include <mutex>
 
-#include "sentinel/types.hpp"
-#include "sentinel/scanner.hpp"
+#include "overtrust/types.hpp"
+#include "overtrust/scanner.hpp"
 
-namespace sentinel {
+namespace overtrust {
 
 // The ScanEngine runs in its own thread, walks the target directory,
 // classifies files, detects secrets, scores manifests, scans processes,
@@ -44,4 +44,4 @@ private:
     std::atomic<bool> running_{false};
 };
 
-} // namespace sentinel
+} // namespace overtrust

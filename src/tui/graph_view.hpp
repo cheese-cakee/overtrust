@@ -7,10 +7,10 @@
 #include <cmath>
 #include <algorithm>
 
-#include "sentinel/types.hpp"
+#include "overtrust/types.hpp"
 #include "tui/colors.hpp"
 
-namespace sentinel::tui {
+namespace overtrust::tui {
 
 using namespace ftxui;
 
@@ -123,4 +123,4 @@ inline Element render_graph_visual(const std::vector<Finding>& findings,
     return canvas(std::move(c));
 }
 
-} // namespace sentinel::tui
+} // namespace overtrust::tui

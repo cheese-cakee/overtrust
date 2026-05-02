@@ -1,11 +1,11 @@
-#include "sentinel/graph.hpp"
+#include "overtrust/graph.hpp"
 
 #include <algorithm>
 #include <sstream>
 #include <queue>
 #include <climits>
 
-namespace sentinel {
+namespace overtrust {
 
 // ── TrustGraph: mutators ──────────────────────────────────────────────────────
 
@@ -325,4 +325,4 @@ int compute_trust_score(const TrustGraph& g) {
     return std::max(0, score);
 }
 
-} // namespace sentinel
+} // namespace overtrust

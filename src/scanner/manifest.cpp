@@ -1,4 +1,4 @@
-#include "sentinel/manifest.hpp"
+#include "overtrust/manifest.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -7,7 +7,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace sentinel {
+namespace overtrust {
 
 using json = nlohmann::json;
 
@@ -301,4 +301,4 @@ std::vector<Finding> score_dockerfile(const DockerfileManifest& m,
     return out;
 }
 
-} // namespace sentinel
+} // namespace overtrust

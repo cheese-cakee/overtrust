@@ -1,4 +1,4 @@
-# Sentinel default rule set
+# Overtrust default rule set
 # Rule severity: info | low | medium | high | critical
 # These supplement the hardcoded patterns with user-extensible definitions.
 
