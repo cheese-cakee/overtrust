@@ -287,7 +287,7 @@ TrustGraph build_trust_graph(const std::vector<Finding>& findings) {
             se.to     = "secrets:pool";
             se.kind   = EdgeKind::ContainsSecret;
             se.weight = f.score;
-            se.label  = f.pattern_name.empty() ? f.rule_id : f.message;
+            se.label  = f.message.empty() ? f.rule_id : f.message;
             g.add_edge(se);
         }
     }
