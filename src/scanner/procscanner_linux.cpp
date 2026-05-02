@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 #include "overtrust/procscanner.hpp"
 
 #include <fstream>
@@ -15,46 +17,46 @@ namespace fs = std::filesystem;
 // ── Capability table ──────────────────────────────────────────────────────────
 
 const CapEntry CAPABILITY_TABLE[] = {
-    {  0, "CAP_CHOWN",           false },
-    {  1, "CAP_DAC_OVERRIDE",    false },
-    {  2, "CAP_DAC_READ_SEARCH", true  },
-    {  3, "CAP_FOWNER",          false },
-    {  4, "CAP_FSETID",          false },
-    {  5, "CAP_KILL",            false },
-    {  6, "CAP_SETGID",          true  },
-    {  7, "CAP_SETUID",          true  },
-    {  8, "CAP_SETPCAP",         false },
-    {  9, "CAP_LINUX_IMMUTABLE", false },
-    { 10, "CAP_NET_BIND_SERVICE",false },
-    { 11, "CAP_NET_BROADCAST",   false },
-    { 12, "CAP_NET_ADMIN",       true  },
-    { 13, "CAP_NET_RAW",         true  },
-    { 14, "CAP_IPC_LOCK",        false },
-    { 15, "CAP_IPC_OWNER",       false },
-    { 16, "CAP_SYS_MODULE",      true  },
-    { 17, "CAP_SYS_RAWIO",       true  },
-    { 18, "CAP_SYS_CHROOT",      false },
-    { 19, "CAP_SYS_PTRACE",      true  },
-    { 20, "CAP_SYS_PACCT",       false },
-    { 21, "CAP_SYS_ADMIN",       true  },
-    { 22, "CAP_SYS_BOOT",        true  },
-    { 23, "CAP_SYS_NICE",        false },
-    { 24, "CAP_SYS_RESOURCE",    false },
-    { 25, "CAP_SYS_TIME",        false },
-    { 26, "CAP_SYS_TTY_CONFIG",  false },
-    { 27, "CAP_MKNOD",           false },
-    { 28, "CAP_LEASE",           false },
-    { 29, "CAP_AUDIT_WRITE",     false },
-    { 30, "CAP_AUDIT_CONTROL",   true  },
-    { 31, "CAP_SETFCAP",         false },
-    { 32, "CAP_MAC_OVERRIDE",    true  },
-    { 33, "CAP_MAC_ADMIN",       true  },
-    { 34, "CAP_SYSLOG",          false },
-    { 35, "CAP_WAKE_ALARM",      false },
-    { 36, "CAP_BLOCK_SUSPEND",   false },
-    { 37, "CAP_AUDIT_READ",      false },
-    { 38, "CAP_PERFMON",         false },
-    { 39, "CAP_BPF",             false },
+    {  0, "CAP_CHOWN",              false },
+    {  1, "CAP_DAC_OVERRIDE",       false },
+    {  2, "CAP_DAC_READ_SEARCH",    true  },
+    {  3, "CAP_FOWNER",             false },
+    {  4, "CAP_FSETID",             false },
+    {  5, "CAP_KILL",               false },
+    {  6, "CAP_SETGID",             true  },
+    {  7, "CAP_SETUID",             true  },
+    {  8, "CAP_SETPCAP",            false },
+    {  9, "CAP_LINUX_IMMUTABLE",    false },
+    { 10, "CAP_NET_BIND_SERVICE",   false },
+    { 11, "CAP_NET_BROADCAST",      false },
+    { 12, "CAP_NET_ADMIN",          true  },
+    { 13, "CAP_NET_RAW",            true  },
+    { 14, "CAP_IPC_LOCK",           false },
+    { 15, "CAP_IPC_OWNER",          false },
+    { 16, "CAP_SYS_MODULE",         true  },
+    { 17, "CAP_SYS_RAWIO",          true  },
+    { 18, "CAP_SYS_CHROOT",         false },
+    { 19, "CAP_SYS_PTRACE",         true  },
+    { 20, "CAP_SYS_PACCT",          false },
+    { 21, "CAP_SYS_ADMIN",          true  },
+    { 22, "CAP_SYS_BOOT",           true  },
+    { 23, "CAP_SYS_NICE",           false },
+    { 24, "CAP_SYS_RESOURCE",       false },
+    { 25, "CAP_SYS_TIME",           false },
+    { 26, "CAP_SYS_TTY_CONFIG",     false },
+    { 27, "CAP_MKNOD",              false },
+    { 28, "CAP_LEASE",              false },
+    { 29, "CAP_AUDIT_WRITE",        false },
+    { 30, "CAP_AUDIT_CONTROL",      true  },
+    { 31, "CAP_SETFCAP",            false },
+    { 32, "CAP_MAC_OVERRIDE",       true  },
+    { 33, "CAP_MAC_ADMIN",          true  },
+    { 34, "CAP_SYSLOG",             false },
+    { 35, "CAP_WAKE_ALARM",         false },
+    { 36, "CAP_BLOCK_SUSPEND",      false },
+    { 37, "CAP_AUDIT_READ",         false },
+    { 38, "CAP_PERFMON",            false },
+    { 39, "CAP_BPF",                false },
     { 40, "CAP_CHECKPOINT_RESTORE", false },
 };
 const std::size_t CAPABILITY_TABLE_SIZE =
@@ -107,30 +109,6 @@ static bool fd_path_is_sensitive(const std::string& path) {
     };
     for (auto& s : SENSITIVE)
         if (path.find(s) != std::string::npos) return true;
-    return false;
-}
-
-// Well-known system processes to skip — they legitimately hold all caps
-static bool is_system_process(const ProcessInfo& p) {
-    static const std::vector<std::string> SYSTEM_NAMES = {
-        "systemd", "init", "kthreadd", "ksoftirqd", "kworker",
-        "migration", "rcu_", "watchdog", "kdevtmpfs", "kauditd",
-        "khungtaskd", "oom_reaper", "writeback", "kcompactd",
-        "ksmd", "khugepaged", "kintegrityd", "kblockd", "tpm_dev_wq",
-        "edac-poller", "devfreq_wq", "kswapd", "irq/", "smpboot",
-        "idle_inject", "kstrp", "zswap-shrink", "kthrotld",
-        "ipv6_addrconf", "kmemleak", "jbd2", "ext4", "loop",
-        "scsi_eh", "usb-storage", "bioset",
-    };
-    // PID 1 and 2 are always system
-    if (p.pid <= 2) return true;
-    // Kernel threads have no cmdline
-    if (p.cmdline.empty() && p.name[0] == 'k') return true;
-
-    std::string lower = p.name;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-    for (auto& sn : SYSTEM_NAMES)
-        if (lower.find(sn) != std::string::npos) return true;
     return false;
 }
 
@@ -191,7 +169,10 @@ ProcessInfo read_process(uint32_t pid) {
         auto& ce = CAPABILITY_TABLE[i];
         if (p.cap_eff & (1ULL << ce.bit)) {
             p.active_caps.push_back(ce.name);
-            if (ce.dangerous) p.dangerous_caps.push_back(ce.name);
+            if (ce.dangerous) {
+                p.dangerous_caps.push_back(ce.name);
+                p.dangerous_privs.push_back(ce.name); // populate cross-platform field too
+            }
         }
     }
 
@@ -211,6 +192,28 @@ ProcessInfo read_process(uint32_t pid) {
     }
 
     return p;
+}
+
+// ── is_system_process (Linux) ─────────────────────────────────────────────────
+
+static bool is_system_process(const ProcessInfo& p) {
+    static const std::vector<std::string> SYSTEM_NAMES = {
+        "systemd", "init", "kthreadd", "ksoftirqd", "kworker",
+        "migration", "rcu_", "watchdog", "kdevtmpfs", "kauditd",
+        "khungtaskd", "oom_reaper", "writeback", "kcompactd",
+        "ksmd", "khugepaged", "kintegrityd", "kblockd", "tpm_dev_wq",
+        "edac-poller", "devfreq_wq", "kswapd", "irq/", "smpboot",
+        "idle_inject", "kstrp", "zswap-shrink", "kthrotld",
+        "ipv6_addrconf", "kmemleak", "jbd2", "ext4", "loop",
+        "scsi_eh", "usb-storage", "bioset",
+    };
+    if (p.pid <= 2) return true;
+    if (p.cmdline.empty() && p.name[0] == 'k') return true;
+    std::string lower = p.name;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    for (auto& sn : SYSTEM_NAMES)
+        if (lower.find(sn) != std::string::npos) return true;
+    return false;
 }
 
 // ── is_ai_tool ────────────────────────────────────────────────────────────────
@@ -235,8 +238,6 @@ bool is_ai_tool(const ProcessInfo& p) {
 
 std::vector<Finding> score_process(const ProcessInfo& p) {
     std::vector<Finding> out;
-
-    // Skip kernel/system processes — they legitimately hold elevated caps
     if (is_system_process(p)) return out;
 
     static int counter = 5000;
@@ -255,7 +256,6 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
 
     std::string proc_label = p.name + " (PID " + std::to_string(p.pid) + ")";
 
-    // Only flag dangerous caps on non-root user processes — root owning caps is expected
     if (!p.dangerous_caps.empty() && p.uid >= 1000) {
         std::string caps;
         for (auto& c : p.dangerous_caps) caps += c + " ";
@@ -264,21 +264,18 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
             "CapEff: " + caps);
     }
 
-    // Seccomp off on a user process running as root — flag it
     if (p.seccomp == 0 && p.uid == 0 && p.pid > 100) {
         add("PROC-002", Severity::Medium, 5.5,
             proc_label + " runs as root with no seccomp filter",
             "Seccomp: 0, UID: 0");
     }
 
-    // Sensitive file open — always flag regardless of uid
     for (auto& fd_path : p.sensitive_fds) {
         add("PROC-003", Severity::High, 7.0,
             proc_label + " has sensitive file open",
-            "fd → " + fd_path);
+            "fd \xe2\x86\x92 " + fd_path);
     }
 
-    // AI tool touching secrets — highest priority finding
     if (is_ai_tool(p) && !p.sensitive_fds.empty()) {
         add("PROC-004", Severity::Critical, 9.5,
             "AI tool " + proc_label + " is reading sensitive files",
@@ -302,3 +299,5 @@ std::vector<Finding> scan_processes() {
 }
 
 } // namespace overtrust
+
+#endif // __linux__

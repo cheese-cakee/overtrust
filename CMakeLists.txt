@@ -55,18 +55,35 @@ target_link_libraries(overtrust PRIVATE
   ftxui::component
   nlohmann_json::nlohmann_json
   yaml-cpp::yaml-cpp
-  pthread
-  stdc++fs
+  $<$<NOT:$<PLATFORM_ID:Windows>>:pthread>
+  $<$<NOT:$<PLATFORM_ID:Windows>>:stdc++fs>
 )
 
-target_compile_options(overtrust PRIVATE
-  -Wall
-  -Wextra
-  -Wpedantic
-  $<$<CONFIG:Release>:-O2>
-  $<$<CONFIG:Debug>:-g -O0 -fsanitize=address>
-)
+# Windows-specific: process/token APIs
+if(WIN32)
+  target_link_libraries(overtrust PRIVATE Psapi Advapi32 Kernel32)
+endif()
 
-target_link_options(overtrust PRIVATE
-  $<$<CONFIG:Debug>:-fsanitize=address>
-)
+# Compiler flags — GCC/Clang only (not MSVC)
+if(NOT MSVC)
+  target_compile_options(overtrust PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    $<$<CONFIG:Release>:-O2>
+    $<$<CONFIG:Debug>:-g -O0 -fsanitize=address>
+  )
+  target_link_options(overtrust PRIVATE
+    $<$<CONFIG:Debug>:-fsanitize=address>
+  )
+else()
+  # MSVC: use /W4, enable standard conformance
+  target_compile_options(overtrust PRIVATE
+    /W4
+    /permissive-
+    $<$<CONFIG:Release>:/O2>
+    $<$<CONFIG:Debug>:/Od /Zi>
+  )
+  # UTF-8 source and execution charset (needed for non-ASCII literals)
+  target_compile_options(overtrust PRIVATE /utf-8)
+endif()
