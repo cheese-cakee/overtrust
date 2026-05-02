@@ -1,26 +1,40 @@
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/screen_interactive.hpp>
-#include <ftxui/dom/elements.hpp>
+#include <iostream>
+#include <string>
 
 #include "sentinel/version.hpp"
+#include "tui/app.hpp"
 
-int main() {
-    using namespace ftxui;
+static void print_usage(const char* prog) {
+    std::cerr
+        << "Usage: " << prog << " [TARGET_DIR]\n"
+        << "\n"
+        << "  TARGET_DIR   Directory to scan (default: $HOME)\n"
+        << "\n"
+        << "  -h, --help   Show this help\n"
+        << "  --version    Print version\n";
+}
 
-    auto screen = ScreenInteractive::Fullscreen();
+int main(int argc, char** argv) {
+    std::string target;
 
-    auto quit_btn = Button("Quit", screen.ExitLoopClosure());
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-h" || arg == "--help") {
+            print_usage(argv[0]);
+            return 0;
+        }
+        if (arg == "--version") {
+            std::cout << sentinel::APP_NAME << " " << sentinel::VERSION << "\n";
+            return 0;
+        }
+        target = arg;
+    }
 
-    auto renderer = Renderer(quit_btn, [&] {
-        return vbox({
-                   text("SENTINEL v" + std::string(sentinel::VERSION)) | bold | color(Color::Cyan),
-                   text(sentinel::DESCRIPTION) | dim,
-                   separator(),
-                   quit_btn->Render() | center,
-               }) |
-               border | center;
-    });
+    if (target.empty()) {
+        const char* home = std::getenv("HOME");
+        target = home ? home : ".";
+    }
 
-    screen.Loop(renderer);
-    return 0;
+    sentinel::tui::App app(target);
+    return app.run();
 }
