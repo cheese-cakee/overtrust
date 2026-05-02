@@ -1,0 +1,153 @@
+# Sentinel default rule set
+# Rule severity: info | low | medium | high | critical
+# These supplement the hardcoded patterns with user-extensible definitions.
+
+rules:
+  # ── VS Code Extensions ─────────────────────────────────────────────────────
+  - id: EXT-001
+    name: Terminal Access
+    category: ide_permissions
+    severity: high
+    score: 8.5
+    description: Extension declares terminal contribution point
+
+  - id: EXT-002
+    name: Debug Adapter
+    category: ide_permissions
+    severity: high
+    score: 8.0
+    description: Extension registers a debug adapter (can attach to processes)
+
+  - id: EXT-003
+    name: Authentication Provider
+    category: ide_permissions
+    severity: critical
+    score: 9.5
+    description: Extension acts as an auth provider — can intercept tokens
+
+  - id: EXT-004
+    name: Embedded Webview
+    category: ide_permissions
+    severity: medium
+    score: 6.0
+    description: Extension renders arbitrary HTML/JS in a webview panel
+
+  - id: EXT-005
+    name: Always-On Activation
+    category: ide_permissions
+    severity: medium
+    score: 5.5
+    description: Extension activates on IDE startup (* or onStartupFinished)
+
+  - id: EXT-006
+    name: Task Definition Provider
+    category: ide_permissions
+    severity: medium
+    score: 6.5
+    description: Extension defines task runners — can execute arbitrary commands
+
+  # ── npm Packages ───────────────────────────────────────────────────────────
+  - id: NPM-001
+    name: Suspicious Install Script
+    category: supply_chain
+    severity: critical
+    score: 9.0
+    description: Package runs curl/wget/bash in a lifecycle script
+
+  - id: NPM-002
+    name: Preinstall Script
+    category: supply_chain
+    severity: high
+    score: 7.0
+    description: Package has a preinstall lifecycle hook
+
+  - id: NPM-003
+    name: Postinstall Script
+    category: supply_chain
+    severity: medium
+    score: 6.0
+    description: Package has a postinstall lifecycle hook
+
+  # ── Docker ─────────────────────────────────────────────────────────────────
+  - id: DOCKER-001
+    name: Runs as Root
+    category: container
+    severity: high
+    score: 7.5
+    description: Container has no USER directive — processes run as root
+
+  - id: DOCKER-002
+    name: Curl Pipe Bash
+    category: container
+    severity: critical
+    score: 9.5
+    description: RUN instruction fetches and executes remote script
+
+  # ── Files ──────────────────────────────────────────────────────────────────
+  - id: FILE-001
+    name: SSH Private Key
+    category: credentials
+    severity: high
+    score: 7.5
+    description: SSH private key found in indexed directory
+
+  - id: FILE-002
+    name: AWS Credentials File
+    category: credentials
+    severity: critical
+    score: 9.0
+    description: AWS credentials file accessible in current namespace
+
+  # ── Secrets ────────────────────────────────────────────────────────────────
+  - id: SEC-001
+    name: AWS Access Key ID
+    category: secrets
+    severity: critical
+    score: 9.5
+
+  - id: SEC-006
+    name: Anthropic API Key
+    category: secrets
+    severity: critical
+    score: 9.5
+
+  - id: SEC-007
+    name: OpenAI API Key
+    category: secrets
+    severity: critical
+    score: 9.0
+
+  - id: SEC-008
+    name: Stripe Live Secret Key
+    category: secrets
+    severity: critical
+    score: 9.5
+
+  # ── Process ────────────────────────────────────────────────────────────────
+  - id: PROC-001
+    name: Dangerous Capabilities
+    category: process
+    severity: high
+    score: 8.0
+    description: Process holds dangerous Linux capabilities
+
+  - id: PROC-002
+    name: Root Without Seccomp
+    category: process
+    severity: high
+    score: 7.0
+    description: Root process lacks seccomp syscall filter
+
+  - id: PROC-003
+    name: Sensitive File Open
+    category: process
+    severity: critical
+    score: 9.0
+    description: Process has sensitive file open (SSH, AWS, .env)
+
+  - id: PROC-004
+    name: AI Tool Reads Secrets
+    category: process
+    severity: critical
+    score: 9.5
+    description: AI assistant process has sensitive credentials open
