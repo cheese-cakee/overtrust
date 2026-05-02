@@ -12,6 +12,7 @@
 #include "tui/colors.hpp"
 #include "tui/splash.hpp"
 #include "tui/widgets.hpp"
+#include "tui/graph_view.hpp"
 
 namespace sentinel::tui {
 
@@ -139,13 +140,17 @@ public:
             Element center_panel;
             if (show_graph) {
                 center_panel = window(
-                    text(" Trust Graph "),
-                    render_graph_compact(findings)
+                    text(" Trust Graph [v=toggle] "),
+                    render_graph_visual(findings, 80, 30)
                 );
             } else {
                 center_panel = window(
-                    text(" Overview "),
-                    render_overview(findings, score, scanning)
+                    text(" Overview [v=graph] "),
+                    vbox({
+                        render_overview(findings, score, scanning),
+                        separator(),
+                        render_graph_compact(findings),
+                    })
                 );
             }
 
@@ -252,7 +257,7 @@ private:
     // ── Internal renderers ─────────────────────────────────────────────────
 
     static Element render_overview(const std::vector<Finding>& findings,
-                                   int score, bool scanning) {
+                                   int /*score*/, bool scanning) {
         if (scanning && findings.empty()) {
             return vbox({
                 filler(),
@@ -282,30 +287,6 @@ private:
             separator(),
             text("  Press v for graph view") | dim,
         });
-    }
-
-    static Element render_graph_compact(const std::vector<Finding>& findings) {
-        if (findings.empty()) {
-            return text("  No findings to graph") | dim;
-        }
-        std::vector<Element> rows;
-        rows.push_back(text("  [system]") | bold | color(COLOR_ACCENT));
-        for (std::size_t i = 0; i < findings.size() && i < 10; ++i) {
-            auto& f = findings[i];
-            Color c = severity_color(f.severity);
-            std::string prefix = (i + 1 < findings.size() && i + 1 < 10) ? "  ├── " : "  └── ";
-            rows.push_back(
-                hbox({
-                    text(prefix) | dim,
-                    text(f.message.substr(0, 28)) | color(c),
-                    text(" [" + std::string(severity_str(f.severity)) + "]") | color(c) | bold,
-                })
-            );
-        }
-        if (findings.size() > 10) {
-            rows.push_back(text("  └── ... " + std::to_string(findings.size() - 10) + " more") | dim);
-        }
-        return vbox(std::move(rows));
     }
 
     // ── Members ────────────────────────────────────────────────────────────
