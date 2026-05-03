@@ -46,6 +46,10 @@ static const std::unordered_set<std::string> FALSE_POSITIVE_TOKENS = {
     "sk_test_4eC39Hq",
     // Common test strings
     "password123", "supersecret", "mysecretkey",
+    // PEM header in source code regex definitions — actual key files won't have
+    // these surrounding characters; source code lines do
+    "KEY-----)",
+    "KEY-----\\)",
 };
 
 static bool is_false_positive(const std::string& match) {
@@ -243,6 +247,9 @@ constexpr std::size_t NUM_PATTERNS = sizeof(PATTERNS) / sizeof(PATTERNS[0]);
 std::vector<SecretMatch> scan_for_secrets(const std::string& content,
                                            const std::string& /*filepath*/) {
     std::vector<SecretMatch> results;
+    // Dedup key: (rule_id, line_number, first-8-chars-of-match)
+    // Prevents the same secret showing up multiple times from overlapping patterns
+    std::unordered_set<std::string> seen;
 
     // Split into lines for line-number tracking
     std::vector<std::string> lines;
@@ -281,6 +288,28 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
                     bool fp = is_false_positive(matched);
                     if (fp) continue;
 
+                    // Phase 5: source-code context guard for PEM header patterns.
+                    // Real PEM headers appear alone on a line; in source code they're
+                    // inside string literals (R"(...)", "...", regex definitions).
+                    // If the matched line contains raw-string delimiters or the pattern
+                    // is surrounded by quotes, skip it.
+                    if (matched.find("-----BEGIN") != std::string::npos) {
+                        const auto& src_line = line;
+                        bool in_string = src_line.find("R\"(") != std::string::npos
+                                      || src_line.find("regex_str") != std::string::npos
+                                      || src_line.find("regex(") != std::string::npos
+                                      || (src_line.find('"') != std::string::npos &&
+                                          src_line.find("-----BEGIN") != std::string::npos &&
+                                          src_line.find("-----END") == std::string::npos);
+                        if (in_string) continue;
+                    }
+
+                    // Dedup: same secret value on same line from different patterns
+                    std::string dedup_key = std::string(pat.rule_id) + ":" +
+                                            std::to_string(ln) + ":" +
+                                            matched.substr(0, std::min(matched.size(), std::size_t(12)));
+                    if (!seen.insert(dedup_key).second) continue;
+
                     // Build redacted display string
                     std::string display = matched.size() > 8
                                         ? matched.substr(0, 8) + "..."
@@ -307,9 +336,8 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
 // ── Convert to Finding ────────────────────────────────────────────────────────
 
 Finding secret_to_finding(const SecretMatch& m, const std::string& file) {
-    static int counter = 1000; // start above manifest finding IDs
     Finding f;
-    f.id       = "F-" + std::to_string(++counter);
+    f.id       = next_finding_id();
     f.rule_id  = m.rule_id;
     f.severity = m.severity;
     f.file     = file;

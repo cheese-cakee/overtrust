@@ -3,6 +3,8 @@
 #include <thread>
 #include <filesystem>
 #include <atomic>
+#include <mutex>
+#include <vector>
 
 // TTY detection — cross-platform
 #ifdef _WIN32
@@ -15,6 +17,8 @@
 
 #include "overtrust/version.hpp"
 #include "overtrust/engine.hpp"
+#include "overtrust/report.hpp"
+#include "overtrust/graph.hpp"
 #include "tui/app.hpp"
 
 namespace fs = std::filesystem;
@@ -23,81 +27,99 @@ static void print_usage(const char* prog) {
     std::cerr
         << "Usage: " << prog << " [TARGET_DIR] [OPTIONS]\n"
         << "\n"
-        << "  TARGET_DIR       Directory to scan (default: $HOME)\n"
+        << "  TARGET_DIR            Directory to scan (default: $HOME)\n"
         << "\n"
-        << "  -h, --help       Show this help\n"
-        << "  --version        Print version\n"
-        << "  --no-tui         Run headless, print findings to stdout (JSON)\n";
+        << "  -h, --help            Show this help\n"
+        << "  --version             Print version\n"
+        << "  --no-tui              Run headless, print findings to stdout (JSON)\n"
+        << "  --report <file.json>  Write full JSON report to file after scan\n";
 }
 
-// ── Headless / JSON output mode (non-TTY or --no-tui) ─────────────────────────
-static int run_headless(const std::string& target) {
-    // Collect all findings first, then print — avoids interleaved JSON
+// ── Shared scan runner ─────────────────────────────────────────────────────────
+// Runs scan, collects all findings + score, optionally writes report file.
+// Used by both headless and TUI modes.
+
+struct ScanResult {
     std::vector<overtrust::Finding> findings;
+    int trust_score = -1;
+};
+
+// ── Headless / JSON output mode ────────────────────────────────────────────────
+static int run_headless(const std::string& target, const std::string& report_path) {
+    ScanResult result;
     std::mutex findings_mu;
-    int final_score = -1;
-    std::atomic<bool> done{false};
 
     overtrust::ScanCallbacks cbs;
     cbs.on_finding = [&](overtrust::Finding f) {
         std::lock_guard<std::mutex> lk(findings_mu);
-        findings.push_back(std::move(f));
+        result.findings.push_back(std::move(f));
     };
     cbs.on_progress = [&](std::size_t s, std::size_t t) {
         std::cerr << "\r  scanning " << s << "/" << t << "   ";
     };
     cbs.on_complete = [&](int score) {
-        final_score = score;
+        result.trust_score = score;
     };
 
     overtrust::ScanEngine engine(target, std::move(cbs));
     engine.start();
 
-    // Wait for engine thread to finish
-    while (engine.is_running()) {
+    while (engine.is_running())
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
 
     std::cerr << "\n";
 
-    // Print JSON output
+    // ── stdout JSON ────────────────────────────────────────────────────────
+    auto esc = [](const std::string& s) {
+        std::string r;
+        for (char c : s) {
+            if      (c == '"')  r += "\\\"";
+            else if (c == '\\') r += "\\\\";
+            else if (c == '\n') r += "\\n";
+            else if (c == '\r') r += "";
+            else                r += c;
+        }
+        return r;
+    };
+
     std::cout << "{\n"
-              << "  \"target\": \"" << target << "\",\n"
-              << "  \"trust_score\": " << final_score << ",\n"
+              << "  \"target\": \""      << esc(target)               << "\",\n"
+              << "  \"trust_score\": "   << result.trust_score         << ",\n"
               << "  \"findings\": [\n";
 
-    for (std::size_t i = 0; i < findings.size(); ++i) {
-        auto& f = findings[i];
-        // Escape quotes in strings
-        auto esc = [](std::string s) {
-            std::string r;
-            for (char c : s) {
-                if (c == '"')  r += "\\\"";
-                else if (c == '\\') r += "\\\\";
-                else if (c == '\n') r += "\\n";
-                else r += c;
-            }
-            return r;
-        };
+    for (std::size_t i = 0; i < result.findings.size(); ++i) {
+        auto& f = result.findings[i];
         std::cout << "    {"
-                  << "\"id\":\"" << esc(f.id) << "\","
-                  << "\"rule\":\"" << esc(f.rule_id) << "\","
+                  << "\"id\":\""       << esc(f.id)                           << "\","
+                  << "\"rule\":\""     << esc(f.rule_id)                      << "\","
                   << "\"severity\":\"" << overtrust::severity_str(f.severity) << "\","
-                  << "\"score\":" << f.score << ","
-                  << "\"file\":\"" << esc(f.file) << "\","
-                  << "\"message\":\"" << esc(f.message) << "\","
-                  << "\"evidence\":\"" << esc(f.evidence) << "\""
+                  << "\"score\":"      << f.score                             << ","
+                  << "\"file\":\""     << esc(f.file)                         << "\","
+                  << "\"message\":\""  << esc(f.message)                      << "\","
+                  << "\"evidence\":\"" << esc(f.evidence)                     << "\""
                   << "}";
-        if (i + 1 < findings.size()) std::cout << ",";
+        if (i + 1 < result.findings.size()) std::cout << ",";
         std::cout << "\n";
     }
-
     std::cout << "  ]\n}\n";
+
+    // ── optional full report ───────────────────────────────────────────────
+    if (!report_path.empty()) {
+        auto graph = overtrust::build_trust_graph(result.findings);
+        if (overtrust::write_json_report(report_path, result.findings,
+                                          graph, result.trust_score, target)) {
+            std::cerr << "  report written to " << report_path << "\n";
+        } else {
+            std::cerr << "  warning: could not write report to " << report_path << "\n";
+        }
+    }
+
     return 0;
 }
 
 int main(int argc, char** argv) {
     std::string target;
+    std::string report_path;
     bool force_no_tui = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -114,7 +136,13 @@ int main(int argc, char** argv) {
             force_no_tui = true;
             continue;
         }
-        target = arg;
+        if (arg == "--report" && i + 1 < argc) {
+            report_path = argv[++i];
+            continue;
+        }
+        if (arg.substr(0, 2) != "--") {
+            target = arg;
+        }
     }
 
     if (target.empty()) {
@@ -135,7 +163,7 @@ int main(int argc, char** argv) {
 
     // ── Headless mode if not a TTY or --no-tui ─────────────────────────────
     if (force_no_tui || !IS_TTY()) {
-        return run_headless(target);
+        return run_headless(target, report_path);
     }
 
     // ── TUI mode ────────────────────────────────────────────────────────────
@@ -145,22 +173,45 @@ int main(int argc, char** argv) {
     // mutex contention between scanner thread and TUI renderer thread.
     std::atomic<std::size_t> file_counter{0};
 
+    // Also collect findings for optional --report output
+    std::vector<overtrust::Finding> collected_findings;
+    std::mutex collected_mu;
+    int final_score = -1;
+
     overtrust::ScanCallbacks cbs;
     cbs.on_file = [&](const std::filesystem::path& p) {
-        // Always record in counter
         std::size_t n = file_counter.fetch_add(1, std::memory_order_relaxed);
-        // Push to log every 10th file to avoid lock contention with renderer
-        if (n % 10 == 0) {
-            app.push_log(p.filename().string());
-        }
+        if (n % 10 == 0) app.push_log(p.filename().string());
     };
-    cbs.on_finding  = [&](overtrust::Finding f)            { app.push_finding(std::move(f)); };
-    cbs.on_progress = [&](std::size_t s, std::size_t t)   { app.set_progress(s, t); };
-    cbs.on_complete = [&](int score)                       { app.set_complete(score); };
+    cbs.on_finding = [&](overtrust::Finding f) {
+        if (!report_path.empty()) {
+            std::lock_guard<std::mutex> lk(collected_mu);
+            collected_findings.push_back(f);
+        }
+        app.push_finding(std::move(f));
+    };
+    cbs.on_progress = [&](std::size_t s, std::size_t t) { app.set_progress(s, t); };
+    cbs.on_complete = [&](int score) {
+        final_score = score;
+        app.set_complete(score);
+    };
 
     overtrust::ScanEngine engine(target, std::move(cbs));
     app.start_scanning();
     engine.start();
 
-    return app.run();
+    int ret = app.run();
+
+    // ── Write report after TUI exits (if requested) ─────────────────────────
+    if (!report_path.empty()) {
+        auto graph = overtrust::build_trust_graph(collected_findings);
+        if (overtrust::write_json_report(report_path, collected_findings,
+                                          graph, final_score, target)) {
+            std::cerr << "report written to " << report_path << "\n";
+        } else {
+            std::cerr << "warning: could not write report to " << report_path << "\n";
+        }
+    }
+
+    return ret;
 }

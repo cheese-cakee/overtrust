@@ -157,11 +157,10 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
     // Skip the System and Idle pseudo-processes
     if (p.pid == 0 || p.pid == 4) return out;
 
-    static int counter = 5000;
     auto add = [&](const char* rule, Severity sev, double score,
                    std::string msg, std::string ev = "") {
         Finding f;
-        f.id       = "F-" + std::to_string(++counter);
+        f.id       = next_finding_id();
         f.rule_id  = rule;
         f.severity = sev;
         f.file     = "PID:" + std::to_string(p.pid);

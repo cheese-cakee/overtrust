@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <cctype>
+#include <unordered_set>
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -195,24 +196,89 @@ ProcessInfo read_process(uint32_t pid) {
 }
 
 // ── is_system_process (Linux) ─────────────────────────────────────────────────
+// Returns true for kernel threads and well-known system daemons that are
+// expected to run as root — flagging them is noise, not signal.
 
 static bool is_system_process(const ProcessInfo& p) {
-    static const std::vector<std::string> SYSTEM_NAMES = {
-        "systemd", "init", "kthreadd", "ksoftirqd", "kworker",
-        "migration", "rcu_", "watchdog", "kdevtmpfs", "kauditd",
-        "khungtaskd", "oom_reaper", "writeback", "kcompactd",
-        "ksmd", "khugepaged", "kintegrityd", "kblockd", "tpm_dev_wq",
-        "edac-poller", "devfreq_wq", "kswapd", "irq/", "smpboot",
-        "idle_inject", "kstrp", "zswap-shrink", "kthrotld",
-        "ipv6_addrconf", "kmemleak", "jbd2", "ext4", "loop",
-        "scsi_eh", "usb-storage", "bioset",
-    };
+    // PID 0 (idle), 1 (init/systemd), 2 (kthreadd) are always system
     if (p.pid <= 2) return true;
-    if (p.cmdline.empty() && p.name[0] == 'k') return true;
+
+    // Kernel threads: no cmdline, name often starts with 'k' or '[...]'
+    // They appear with empty cmdline and square-bracket names in /proc
+    if (p.cmdline.empty()) return true;
+
     std::string lower = p.name;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-    for (auto& sn : SYSTEM_NAMES)
-        if (lower.find(sn) != std::string::npos) return true;
+
+    // Kernel thread name patterns (prefixes/substrings)
+    static const std::vector<std::string> KERNEL_PREFIXES = {
+        "kworker/", "ksoftirqd/", "migration/", "watchdog/",
+        "irq/", "kthread", "rcu_", "idle_inject/",
+    };
+    for (auto& pf : KERNEL_PREFIXES)
+        if (lower.find(pf) != std::string::npos) return true;
+
+    // Exact-match well-known system daemons (root-running, expected, not a threat)
+    static const std::unordered_set<std::string> SYSTEM_EXACT = {
+        // Core OS
+        "systemd", "init", "kthreadd", "kdevtmpfs", "kauditd",
+        "khungtaskd", "oom_reaper", "writeback", "kcompactd",
+        "ksmd", "khugepaged", "kintegrityd", "kblockd", "kswapd0",
+        "kstrp", "kthrotld", "ipv6_addrconf", "kmemleak",
+        "jbd2", "cifsd", "bioset", "loop0", "loop1", "scsi_eh0",
+        "tpm_dev_wq", "edac-poller", "devfreq_wq",
+        "zswap-shrink", "hwrng", "bpfilter_umh",
+        "iscsi_conn_clea", "mld", "oom_reaper",
+        // System daemons
+        "systemd-journald", "systemd-udevd", "systemd-logind",
+        "systemd-resolved", "systemd-networkd", "systemd-timesyncd",
+        "systemd-oomd", "systemd-userdbd", "systemd-homed",
+        "dbus-daemon", "dbus-broker",
+        "NetworkManager", "networkmanager", "wpa_supplicant",
+        "avahi-daemon",
+        "polkitd",
+        "rsyslogd", "syslogd",
+        "crond", "cron", "atd",
+        "sshd",
+        "agetty",
+        "login",
+        "su",
+        "sudo",
+        "containerd", "dockerd", "docker-proxy",
+        "snapd",
+        "packagekitd",
+        "udisksd",
+        "upowerd",
+        "accounts-daemon",
+        "rtkit-daemon",
+        "colord",
+        "ModemManager",
+        "bluetoothd",
+        "cupsd",
+        "chronyd", "ntpd",
+        "rngd",
+        "irqbalance",
+        "lvm", "lvmetad",
+        "multipathd",
+        "iscsid",
+        "acpid",
+        "thermald",
+        "tuned",
+        // Virtualisation / container infra
+        "qemu-kvm", "qemu-system-x86", "libvirtd", "virtiofsd",
+        // This sandbox's own infra — never flag our own runtime
+        "envd", "socat", "sshd",
+    };
+
+    if (SYSTEM_EXACT.count(lower)) return true;
+
+    // Any process whose name ends with 'd' and has UID=0 and no cmdline args
+    // is almost certainly a system daemon started by init
+    // (heuristic: single-token cmdline == just the binary name)
+    if (p.uid == 0 && p.cmdline.find(' ') == std::string::npos) {
+        if (!lower.empty() && lower.back() == 'd') return true;
+    }
+
     return false;
 }
 
@@ -240,11 +306,10 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
     std::vector<Finding> out;
     if (is_system_process(p)) return out;
 
-    static int counter = 5000;
     auto add = [&](const char* rule, Severity sev, double score,
                    std::string msg, std::string ev = "") {
         Finding f;
-        f.id       = "F-" + std::to_string(++counter);
+        f.id       = next_finding_id();
         f.rule_id  = rule;
         f.severity = sev;
         f.file     = "/proc/" + std::to_string(p.pid);

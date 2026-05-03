@@ -171,10 +171,7 @@ DockerfileManifest parse_dockerfile(const fs::path& path) {
 
 // ── Scorers ───────────────────────────────────────────────────────────────────
 
-static int s_finding_counter = 0;
-static std::string next_id() {
-    return "F-" + std::to_string(++s_finding_counter);
-}
+static std::string next_id() { return next_finding_id(); }
 
 std::vector<Finding> score_vscode_ext(const VsCodeExtManifest& m,
                                        const std::string& file) {

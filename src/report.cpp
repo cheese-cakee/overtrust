@@ -1,4 +1,5 @@
 #include "overtrust/report.hpp"
+#include "overtrust/version.hpp"
 
 #include <fstream>
 #include <chrono>
@@ -43,7 +44,7 @@ bool write_json_report(const std::string& output_path,
                        const std::string& target)
 {
     json report;
-    report["sentinel_version"] = "0.1.0";
+    report["overtrust_version"] = overtrust::VERSION;
     report["timestamp"]        = iso8601_now();
     report["target"]           = target;
     report["trust_score"]      = trust_score;

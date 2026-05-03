@@ -307,28 +307,77 @@ TrustGraph build_trust_graph(const std::vector<Finding>& findings) {
 }
 
 // ── compute_trust_score ───────────────────────────────────────────────────────
+//
+// Scoring philosophy:
+//   - File/secret findings are the primary signal (credentials, secrets, configs)
+//   - Process findings are secondary: only AI tool findings (PROC-003/004) carry
+//     the same weight as file findings; generic root-process findings (PROC-002)
+//     are minimal noise so they barely affect score
+//   - One leaked AWS key should score ~30. Ten medium proc findings should not
+//     tank a clean system to 0.
+//
+// Scale: 100 = clean, 0 = fully compromised
+//
+// Penalty breakdown (max 100):
+//   File/secret findings:
+//     - Worst single file/secret critical: up to -45
+//     - Additional crits (diminishing):    up to -25
+//     - High file findings (diminishing):  up to -15
+//   Process findings:
+//     - AI tool reading secrets (PROC-004): up to -10
+//     - Dangerous caps (PROC-001):          up to -5
+//     - Generic root/seccomp (PROC-002):    capped at -5 total regardless of count
 
 int compute_trust_score(const TrustGraph& g) {
     if (g.node_count() <= 1) return 100;
 
-    // Collect unique findings (deduplicate by node id)
-    double max_single  = 0.0;
-    double crit_total  = 0.0;
-    int    crit_count  = 0;
-    int    high_count  = 0;
+    double file_max_crit  = 0.0;  // worst single file/secret/ext/docker finding
+    int    file_crit_cnt  = 0;
+    int    file_high_cnt  = 0;
+
+    double ai_proc_max    = 0.0;  // PROC-003/PROC-004 (AI with sensitive FDs)
+    double cap_proc_max   = 0.0;  // PROC-001 (dangerous caps on user process)
+    int    noise_proc_cnt = 0;    // PROC-002 generic root/seccomp noise
 
     for (auto& node : g.nodes()) {
         if (node.id == "system" || node.id == "secrets:pool") continue;
-        max_single = std::max(max_single, node.risk_score);
-        if (node.severity == Severity::Critical) { crit_total += node.risk_score; ++crit_count; }
-        if (node.severity == Severity::High)     { ++high_count; }
+
+        // Classify by rule prefix embedded in node id or severity
+        bool is_proc002 = (node.id.find("/proc/") != std::string::npos &&
+                           node.severity == Severity::Medium);
+        bool is_proc_ai = (node.id.find("/proc/") != std::string::npos &&
+                           node.severity == Severity::Critical);
+        bool is_proc_cap= (node.id.find("/proc/") != std::string::npos &&
+                           node.severity == Severity::High);
+
+        if (is_proc002) {
+            ++noise_proc_cnt;
+        } else if (is_proc_ai) {
+            ai_proc_max = std::max(ai_proc_max, node.risk_score);
+        } else if (is_proc_cap) {
+            cap_proc_max = std::max(cap_proc_max, node.risk_score);
+        } else {
+            // File / secret / extension / npm / docker finding
+            if (node.severity == Severity::Critical) {
+                file_max_crit = std::max(file_max_crit, node.risk_score);
+                ++file_crit_cnt;
+            } else if (node.severity == Severity::High) {
+                ++file_high_cnt;
+            }
+        }
     }
 
-    // Base penalty: worst single finding drives score down the most
-    // Additional penalty: diminishing returns for more findings
-    double penalty = max_single * 5.0                      // worst finding: up to -50
-                   + std::min(crit_count * 3.0,  30.0)     // criticals: up to -30
-                   + std::min(high_count * 1.5,  20.0);    // highs: up to -20
+    double penalty = 0.0;
+
+    // File/secret component
+    penalty += file_max_crit * 4.5;                         // worst crit: up to -42.75 (9.5*4.5)
+    penalty += std::min((file_crit_cnt - (file_max_crit > 0 ? 1 : 0)) * 4.0, 25.0); // more crits
+    penalty += std::min(file_high_cnt * 2.0, 15.0);         // high file findings
+
+    // Process component
+    penalty += std::min(ai_proc_max * 1.0,  10.0);          // AI proc findings
+    penalty += std::min(cap_proc_max * 0.5,  5.0);          // dangerous caps
+    penalty += std::min(noise_proc_cnt * 0.1, 5.0);         // root/seccomp noise: max -5
 
     int score = 100 - static_cast<int>(std::min(penalty, 100.0));
     return std::max(0, score);

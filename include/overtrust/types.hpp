@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <atomic>
 
 namespace overtrust {
 
@@ -68,5 +69,19 @@ struct ScanSummary {
     int         info         = 0;
     int         trust_score  = 100;
 };
+
+// ── Global finding ID counter ─────────────────────────────────────────────────
+// All scanners use this to generate unique, sequential Finding IDs.
+
+namespace detail {
+    inline std::atomic<int>& finding_counter() {
+        static std::atomic<int> c{0};
+        return c;
+    }
+}
+
+inline std::string next_finding_id() {
+    return "F-" + std::to_string(++detail::finding_counter());
+}
 
 } // namespace overtrust
