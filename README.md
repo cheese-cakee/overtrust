@@ -1,74 +1,24 @@
-# Overtrust
-
-> AI-era workstation security scanner. Deterministic. No LLMs.
-
-```
+<p align="center">
+<pre align="center">
  ██████╗ ██╗   ██╗███████╗██████╗ ████████╗██████╗ ██╗   ██╗███████╗████████╗
 ██╔═══██╗██║   ██║██╔════╝██╔══██╗╚══██╔══╝██╔══██╗██║   ██║██╔════╝╚══██╔══╝
 ██║   ██║██║   ██║█████╗  ██████╔╝   ██║   ██████╔╝██║   ██║███████╗   ██║
 ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗   ██║   ██╔══██╗██║   ██║╚════██║   ██║
 ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║   ██║   ██║  ██║╚██████╔╝███████║   ██║
  ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝
-```
+</pre>
+</p>
 
-Overtrust audits what your AI tools, IDE extensions, npm packages, and Docker
-containers can see on your system — with zero network calls, zero token cost,
-100% reproducible results, and a beautiful terminal UI.
+<p align="center">AI-era workstation security scanner. Deterministic. No LLMs.</p>
 
-**"An AI that audits what other AIs you've trusted — without being an AI itself."**
-
----
-
-## Quick Start
-
-**Linux / macOS**
-
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
-
-./build/overtrust                     # scan home directory (TUI mode)
-./build/overtrust /path/to/project    # scan specific directory
-./build/overtrust demo/               # try the included demo fixtures
-```
-
-**Windows**
-
-Prerequisites: [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Desktop development with C++ workload) + [CMake](https://cmake.org/download/) (tick "Add to PATH" during install)
-
-```powershell
-cmake -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
-cmake --build build --config Release -j
-
-.\build\Release\overtrust.exe         # scan home directory
-.\build\Release\overtrust.exe C:\path\to\project
-```
-
-**CLI flags**
-
-| Flag | Description |
-|------|-------------|
-| `<path>` | Directory to scan (default: `$HOME`) |
-| `--no-tui` | Print findings to stdout, no interactive UI |
-| `--report <file>` | Write JSON report to `<file>` (implies `--no-tui`) |
+<p align="center">
+  <a href="https://github.com/cheese-cakee/overtrust/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" /></a>
+  <a href="https://github.com/cheese-cakee/overtrust/actions"><img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" /></a>
+  <img alt="C++17" src="https://img.shields.io/badge/C%2B%2B-17-informational?style=flat-square" />
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" />
+</p>
 
 ---
-
-## What It Detects
-
-| Category | What Overtrust Finds |
-|----------|---------------------|
-| **IDE Extensions** | Terminal access, auth providers, debug adapters, always-on activation |
-| **npm Packages** | Preinstall/postinstall scripts, curl\|bash patterns |
-| **Dockerfiles** | Root containers, curl\|bash RUN instructions |
-| **Secrets** | AWS keys, GitHub tokens, Anthropic/OpenAI keys, Stripe, PEM keys |
-| **Credentials Files** | `~/.aws/credentials`, `.env` files, SSH private keys |
-| **Processes** | Linux capabilities (CAP_SYS_PTRACE, CAP_SYS_ADMIN), open sensitive FDs |
-| **AI Tools** | Cursor/Copilot/Codeium reading your secrets at runtime |
-
----
-
-## Interface
 
 ```
 ┌─ OVERTRUST ─────────────────────────── Trust Score: 34/100 [████░░░░] CRITICAL ─┐
@@ -89,7 +39,64 @@ cmake --build build --config Release -j
 
 ---
 
-## Keybindings
+### Installation
+
+**Linux / macOS**
+
+```bash
+git clone https://github.com/cheese-cakee/overtrust.git
+cd overtrust
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+./build/overtrust
+```
+
+**Windows**
+
+> [!TIP]
+> Install [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Desktop development with C++ workload) and [CMake](https://cmake.org/download/) — tick "Add to PATH" during the CMake install.
+
+```powershell
+git clone https://github.com/cheese-cakee/overtrust.git
+cd overtrust
+cmake -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+cmake --build build --config Release -j
+.\build\Release\overtrust.exe
+```
+
+---
+
+### Usage
+
+```bash
+./build/overtrust                     # scan home directory (TUI mode)
+./build/overtrust /path/to/project    # scan specific directory
+./build/overtrust demo/               # try the included demo fixtures
+```
+
+| Flag | Description |
+|------|-------------|
+| `<path>` | Directory to scan (default: `$HOME`) |
+| `--no-tui` | Print findings to stdout, no interactive UI |
+| `--report <file>` | Write JSON report to `<file>` (implies `--no-tui`) |
+
+---
+
+### What It Detects
+
+| Category | What Overtrust Finds |
+|----------|----------------------|
+| **IDE Extensions** | Terminal access, auth providers, debug adapters, always-on activation |
+| **npm Packages** | Preinstall/postinstall scripts, `curl\|bash` patterns |
+| **Dockerfiles** | Root containers, `curl\|bash` RUN instructions |
+| **Secrets** | AWS keys, GitHub tokens, Anthropic/OpenAI keys, Stripe, PEM keys |
+| **Credentials Files** | `~/.aws/credentials`, `.env` files, SSH private keys |
+| **Processes** | Linux capabilities (`CAP_SYS_PTRACE`, `CAP_SYS_ADMIN`), open sensitive FDs |
+| **AI Tools** | Cursor/Copilot/Codeium reading your secrets at runtime |
+
+---
+
+### Keybindings
 
 | Key | Action |
 |-----|--------|
@@ -102,7 +109,40 @@ cmake --build build --config Release -j
 
 ---
 
-## Architecture
+### Trust Score
+
+```
+100 → 80   TRUSTED     Green    System looks clean
+ 79 → 50   MODERATE    Yellow   Some risks, review findings
+ 49 → 25   HIGH RISK   Orange   Significant exposure
+ 24 →  0   CRITICAL    Red      Immediate action needed
+```
+
+Score = `100 - clamp(Σ(finding.score) × 2, 0, 100)`
+
+---
+
+### Demo
+
+The `demo/` directory ships with intentionally bad configs — a ready-made target for testing:
+
+```bash
+./build/overtrust demo/
+# Expected trust score: ~0–15 (Critical)
+```
+
+| Fixture | What it triggers |
+|---------|-----------------|
+| `demo/.vscode/extensions/ai-code-helper/` | Terminal access, auth provider, debug adapter, webview |
+| `demo/.aws/credentials` | AWS credentials file |
+| `demo/.env` | OpenAI, Anthropic, Stripe, GitHub keys |
+| `demo/packages/evil-npm/` | `curl \| bash` in preinstall script |
+| `demo/Dockerfile` | `curl \| bash` + no USER directive |
+| `demo/scripts/deploy.sh` | Hardcoded secrets |
+
+---
+
+### Architecture
 
 ```
 src/
@@ -127,7 +167,6 @@ src/
 
 include/overtrust/
 ├── types.hpp                 Finding, ScanState, Severity
-├── scanner.hpp               ScanCallbacks, walk_directory
 ├── classifier.hpp            FileKind, classify_file
 ├── manifest.hpp              VsCodeExtManifest, NpmManifest, DockerfileManifest
 ├── secrets.hpp               SecretMatch, scan_for_secrets, shannon_entropy
@@ -135,12 +174,11 @@ include/overtrust/
 ├── graph.hpp                 TrustGraph, GraphNode, GraphEdge
 ├── engine.hpp                ScanEngine
 └── report.hpp                write_json_report
-
 ```
 
 ---
 
-## Stack
+### Stack
 
 | Component | Library | Why |
 |-----------|---------|-----|
@@ -150,43 +188,10 @@ include/overtrust/
 | Filesystem | `std::filesystem` (C++17) | No deps, recursive walk |
 | Processes (Linux) | `/proc` pseudo-FS | Zero kernel modules, read-only |
 | Processes (Windows) | Win32 `CreateToolhelp32Snapshot` | Pure Win32, no admin required |
-| eBPF | libbpf (planned) | Runtime tracing for AI tool monitoring |
 
 ---
 
-## Trust Score
-
-```
-100 → 80   TRUSTED     Green    System looks clean
- 79 → 50   MODERATE    Yellow   Some risks, review findings
- 49 → 25   HIGH RISK   Orange   Significant exposure
- 24 →  0   CRITICAL    Red      Immediate action needed
-```
-
-Score = `100 - clamp(Σ(finding.score) × 2, 0, 100)`
-
----
-
-## Demo Fixtures
-
-```bash
-./build/overtrust demo/
-```
-
-The `demo/` directory contains intentionally bad configs:
-
-- `demo/.vscode/extensions/ai-code-helper/` — extension with terminal, auth, debugger, webview
-- `demo/.aws/credentials` — AWS key file
-- `demo/.env` — OpenAI, Anthropic, Stripe, GitHub keys
-- `demo/packages/evil-npm/` — `curl | bash` in preinstall script
-- `demo/Dockerfile` — `curl | bash` + no USER directive
-- `demo/scripts/deploy.sh` — hardcoded secrets
-
-Expected trust score: ~0–15 (Critical)
-
----
-
-## Roadmap
+### Roadmap
 
 - [ ] eBPF runtime sensor (openat/execve/connect tracepoints)
 - [ ] Fanotify watch mode (`--watch` for real-time alerts)
@@ -198,8 +203,36 @@ Expected trust score: ~0–15 (Critical)
 
 ---
 
-## License
+### FAQ
+
+#### How is this different from other security scanners?
+
+Most scanners are cloud-based, LLM-powered, or require agents/daemons. Overtrust is different:
+
+- **100% offline** — zero network calls, ever
+- **Deterministic** — same input always produces the same findings, no AI hallucinations
+- **AI-aware** — specifically targets the new attack surface created by IDE AI tools (Cursor, Copilot, Codeium) that have broad filesystem access
+- **Zero runtime cost** — no tokens, no subscriptions, no API keys needed to run it
+- **Single binary** — ships as one statically-linked executable
+
+#### Does it require root / admin?
+
+No. Overtrust only reads files and `/proc` entries it has permission to access. It will skip anything it can't read and note it in the scan log.
+
+#### Is any data sent anywhere?
+
+Never. All analysis is local. No telemetry, no crash reports, no update checks.
+
+---
+
+### Contributing
+
+PRs welcome. Read the code first — it's small and well-commented.
+
+---
+
+### License
 
 MIT — see [LICENSE](LICENSE)
 
-Built with C++17, FTXUI, and systems knowledge. No AI was used in the detection logic.
+> Built with C++17, FTXUI, and systems knowledge. No AI was used in the detection logic.
