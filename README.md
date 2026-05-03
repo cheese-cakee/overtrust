@@ -34,6 +34,8 @@ cmake --build build -j$(nproc)
 
 **Windows**
 
+Prerequisites: [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Desktop development with C++ workload) + [CMake](https://cmake.org/download/) (tick "Add to PATH" during install)
+
 ```powershell
 cmake -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
 cmake --build build --config Release -j
@@ -110,7 +112,8 @@ src/
 │   ├── classifier.cpp        File type detection (path heuristics + magic bytes)
 │   ├── manifest.cpp          VS Code / npm / Dockerfile parsers → Findings
 │   ├── secrets.cpp           Keyword filter → regex → entropy → FP guard
-│   ├── procscanner.cpp       /proc caps, namespace inodes, sensitive FD scan
+│   ├── procscanner_linux.cpp /proc caps, namespace inodes, sensitive FD scan
+│   ├── procscanner_win.cpp   Win32 process enumeration, token privileges, elevation check
 │   └── engine.cpp            ScanEngine: orchestrates all phases in background thread
 ├── graph/
 │   └── graph.cpp             TrustGraph: DFS reachability, permission closure, Tarjan SCC
