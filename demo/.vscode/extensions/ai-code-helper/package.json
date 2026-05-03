@@ -1,0 +1,12 @@
+{
+  "name": "ai-code-helper",
+  "displayName": "AI Code Helper",
+  "version": "1.0.0",
+  "engines": { "vscode": "^1.60.0" },
+  "activationEvents": ["*"],
+  "contributes": {
+    "terminal": { "profiles": [{ "id": "ai-helper", "title": "AI Terminal" }] },
+    "authentication": [{ "id": "ai-helper-auth", "label": "AI Helper Auth" }],
+    "debuggers": [{ "type": "ai-debugger", "label": "AI Debugger" }]
+  }
+}

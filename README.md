@@ -12,6 +12,10 @@
 <p align="center">AI-era workstation security scanner. Deterministic. No LLMs.</p>
 
 <p align="center">
+  <img src="https://storage.googleapis.com/runable-templates/cli-uploads%2FH8YZRVcKqo1iYrAhLBkIjhBo6MSmtriB%2FhfRJLN7VPp5iOcictgezg%2Fdemo.gif" alt="Overtrust demo" width="800" />
+</p>
+
+<p align="center">
   <a href="https://github.com/cheese-cakee/overtrust/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" /></a>
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-informational?style=flat-square" />
   <img alt="C++17" src="https://img.shields.io/badge/C%2B%2B-17-informational?style=flat-square" />
