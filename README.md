@@ -21,20 +21,34 @@ containers can see on your system — with zero network calls, zero token cost,
 
 ## Quick Start
 
+**Linux / macOS**
+
 ```bash
-# Build
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
 
-# Scan your home directory
-./build/overtrust
-
-# Scan a specific directory
-./build/overtrust /path/to/project
-
-# Try the included demo fixtures
-./build/overtrust demo/
+./build/overtrust                     # scan home directory (TUI mode)
+./build/overtrust /path/to/project    # scan specific directory
+./build/overtrust demo/               # try the included demo fixtures
 ```
+
+**Windows**
+
+```powershell
+cmake -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
+cmake --build build --config Release -j
+
+.\build\Release\overtrust.exe         # scan home directory
+.\build\Release\overtrust.exe C:\path\to\project
+```
+
+**CLI flags**
+
+| Flag | Description |
+|------|-------------|
+| `<path>` | Directory to scan (default: `$HOME`) |
+| `--no-tui` | Print findings to stdout, no interactive UI |
+| `--report <file>` | Write JSON report to `<file>` (implies `--no-tui`) |
 
 ---
 
@@ -119,8 +133,6 @@ include/overtrust/
 ├── engine.hpp                ScanEngine
 └── report.hpp                write_json_report
 
-rules/
-└── default.yaml              22 rules across 6 categories (human-readable, extensible)
 ```
 
 ---
@@ -131,9 +143,10 @@ rules/
 |-----------|---------|-----|
 | TUI | [FTXUI v5](https://github.com/ArthurSonzogni/FTXUI) | Declarative, beautiful, active development |
 | JSON | [nlohmann/json](https://github.com/nlohmann/json) | Single-header, zero drama |
-| YAML rules | [yaml-cpp](https://github.com/jbeder/yaml-cpp) | Human-editable rule definitions |
+| Rules | Hardcoded C++ | Zero deps, deterministic, no YAML parse attack surface |
 | Filesystem | `std::filesystem` (C++17) | No deps, recursive walk |
-| Processes | `/proc` pseudo-FS | Zero kernel modules, read-only |
+| Processes (Linux) | `/proc` pseudo-FS | Zero kernel modules, read-only |
+| Processes (Windows) | Win32 `CreateToolhelp32Snapshot` | Pure Win32, no admin required |
 | eBPF | libbpf (planned) | Runtime tracing for AI tool monitoring |
 
 ---
@@ -177,7 +190,7 @@ Expected trust score: ~0–15 (Critical)
 - [ ] HTML report export (`--output report.html`)
 - [ ] JetBrains `plugin.xml` scorer
 - [ ] ELF static analysis (stripped binaries, unusual interpreters)
-- [ ] `--rules` flag for custom YAML rule sets
+- [ ] Custom rule definitions via config file
 - [ ] GitHub Actions CI integration
 
 ---

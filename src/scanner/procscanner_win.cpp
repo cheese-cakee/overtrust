@@ -4,13 +4,14 @@
 //
 // Coverage:
 //   - Enumerate all processes via CreateToolhelp32Snapshot
-//   - Resolve exe name + full command line via QueryFullProcessImageName / GetCommandLine (own process only)
-//     and NtQueryInformationProcess for others where accessible
+//   - Resolve exe path via QueryFullProcessImageNameW; cmdline falls back to exe path
+//     (NtQueryInformationProcess + PEB walk requires PROCESS_VM_READ which is rarely granted)
 //   - Detect elevated token via OpenProcessToken + GetTokenInformation(TokenElevation)
 //   - Flag dangerous privileges: SeDebugPrivilege, SeTcbPrivilege, SeLoadDriverPrivilege,
 //     SeImpersonatePrivilege, SeAssignPrimaryTokenPrivilege
-//   - AI tool name detection (same list as Linux)
-//   - Sensitive FD scan: skipped on Windows for MVP (requires SeDebugPrivilege + NtQuerySystemInformation)
+//   - AI tool name/path detection (same list as Linux)
+//   - Sensitive handle scan: not implemented — requires NtQuerySystemInformation(SystemHandleInformation)
+//     which is undocumented and needs SeDebugPrivilege on modern Windows
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -188,7 +189,8 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
             "TokenElevation: true");
     }
 
-    // Sensitive files open (not populated on Windows MVP, but keep the check)
+    // Sensitive files open (not populated on Windows — requires undocumented
+    // NtQuerySystemInformation; keeping the check for cross-platform parity)
     for (auto& fd_path : p.sensitive_fds) {
         add("PROC-003", Severity::High, 7.0,
             proc_label + " has sensitive file open",
@@ -254,10 +256,10 @@ std::vector<Finding> scan_processes() {
         else
             info.name = narrow(std::wstring(entry.szExeFile));
 
-        // Command line is not easily available per-process without NtQueryInformationProcess
-        // + reading PEB from target process (requires PROCESS_VM_READ).
-        // For MVP: leave cmdline empty — name-based detection still catches AI tools.
-        info.cmdline = "";
+        // Full cmdline requires NtQueryInformationProcess + PROCESS_VM_READ to walk the PEB,
+        // which is rarely granted by default. Use the resolved exe path as a fallback so
+        // path-based AI tool detection (e.g. "cursor" anywhere in the install path) works.
+        info.cmdline = exe_path;
 
         // Token checks
         info.is_elevated  = check_elevation(hProc);

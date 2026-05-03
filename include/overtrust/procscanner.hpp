@@ -54,7 +54,9 @@ struct ProcessInfo {
     bool        is_elevated = false;  // TokenElevation — running with admin token
 #endif // _WIN32
 
-    // Cross-platform: sensitive open file paths (Linux: /proc/fd; Windows: skipped for MVP)
+    // Cross-platform: sensitive open file paths
+    //   Linux:   populated from /proc/<pid>/fd symlinks
+    //   Windows: not populated (requires undocumented NtQuerySystemInformation)
     std::vector<std::string> sensitive_fds;
 
     // Cross-platform: dangerous privilege names

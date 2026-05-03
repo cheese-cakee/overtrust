@@ -18,8 +18,16 @@ static std::string read_text_file(const fs::path& path,
                                    std::size_t max_bytes = 512 * 1024) {
     std::ifstream f(path, std::ios::binary);
     if (!f) return {};
-    std::string content(max_bytes, '\0');
-    f.read(content.data(), static_cast<std::streamsize>(max_bytes));
+
+    // Allocate only as much as we'll actually read to avoid wasting 512 KB per tiny file.
+    std::error_code ec;
+    auto file_size = fs::file_size(path, ec);
+    std::size_t alloc = (ec || file_size == static_cast<uintmax_t>(-1))
+                        ? max_bytes
+                        : std::min(static_cast<std::size_t>(file_size), max_bytes);
+
+    std::string content(alloc, '\0');
+    f.read(content.data(), static_cast<std::streamsize>(alloc));
     content.resize(static_cast<std::size_t>(f.gcount()));
     return content;
 }
