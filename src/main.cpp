@@ -213,6 +213,32 @@ int main(int argc, char** argv) {
         return run_headless(target, report_path, exit_code_flag);
     }
 
+#ifdef _WIN32
+    // Enable VT100/ANSI escape sequence processing on Windows Console.
+    // Without this, FTXUI's escape codes print as literal text instead of
+    // rendering the TUI. Requires Windows 10 1511+ (build 10586).
+    // If it fails (older Windows or redirected handle), fall back to headless.
+    {
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        HANDLE hIn  = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD outMode = 0, inMode = 0;
+        bool vt_ok = false;
+        if (hOut != INVALID_HANDLE_VALUE && hIn != INVALID_HANDLE_VALUE &&
+            GetConsoleMode(hOut, &outMode) && GetConsoleMode(hIn, &inMode))
+        {
+            outMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            inMode  |= ENABLE_VIRTUAL_TERMINAL_INPUT;
+            if (SetConsoleMode(hOut, outMode) && SetConsoleMode(hIn, inMode)) {
+                vt_ok = true;
+            }
+        }
+        if (!vt_ok) {
+            // Console doesn't support VT — fall back to headless JSON output
+            return run_headless(target, report_path, exit_code_flag);
+        }
+    }
+#endif
+
     // ── TUI mode ────────────────────────────────────────────────────────────
     overtrust::tui::App app(target);
     int final_ret = 0;
