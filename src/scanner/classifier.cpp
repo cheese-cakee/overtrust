@@ -26,7 +26,8 @@ static bool ends_with(const std::string& s, const std::string& suffix) {
 }
 
 static bool path_contains(const fs::path& p, const std::string& fragment) {
-    std::string full = p.string();
+    // Use generic() to normalise to forward slashes on all platforms
+    std::string full = p.generic_string();
     return full.find(fragment) != std::string::npos;
 }
 

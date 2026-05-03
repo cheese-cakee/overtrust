@@ -1,5 +1,6 @@
 #include "overtrust/secrets.hpp"
 
+#include <filesystem>
 #include <regex>
 #include <sstream>
 #include <cmath>
@@ -7,6 +8,7 @@
 #include <unordered_set>
 
 namespace overtrust {
+namespace fs = std::filesystem;
 
 // ── Shannon entropy ───────────────────────────────────────────────────────────
 
@@ -311,7 +313,7 @@ Finding secret_to_finding(const SecretMatch& m, const std::string& file) {
     f.rule_id  = m.rule_id;
     f.severity = m.severity;
     f.file     = file;
-    f.message  = m.pattern_name + " found in " + file.substr(file.rfind('/') + 1);
+    f.message  = m.pattern_name + " found in " + fs::path(file).filename().string();
     f.score    = m.score;
     f.evidence = "Line " + std::to_string(m.line_number) + ": " + m.matched;
     return f;

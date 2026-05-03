@@ -78,12 +78,13 @@ void ScanEngine::run() {
                 break;
             }
             case FileKind::SshKey: {
+                std::string fname = path.filename().string();
                 Finding f;
-                f.id       = "F-ssh-" + pstr.substr(pstr.rfind('/') + 1);
+                f.id       = "F-ssh-" + fname;
                 f.rule_id  = "FILE-001";
                 f.severity = Severity::High;
                 f.file     = pstr;
-                f.message  = "SSH private key: " + pstr.substr(pstr.rfind('/') + 1);
+                f.message  = "SSH private key: " + fname;
                 f.score    = 7.5;
                 f.evidence = "Private key in indexed directory";
                 emit(f);
@@ -107,12 +108,13 @@ void ScanEngine::run() {
 
         // Emit a finding for shell history exposure
         if (kind == FileKind::ShellHistory) {
+            std::string fname = path.filename().string();
             Finding f;
-            f.id       = "F-shellhist-" + pstr.substr(pstr.rfind('/') + 1);
+            f.id       = "F-shellhist-" + fname;
             f.rule_id  = "FILE-003";
             f.severity = Severity::Medium;
             f.file     = pstr;
-            f.message  = "Shell history file accessible: " + pstr.substr(pstr.rfind('/') + 1);
+            f.message  = "Shell history file accessible: " + fname;
             f.score    = 4.5;
             f.evidence = "History files may contain secrets typed in plain text";
             emit(f);

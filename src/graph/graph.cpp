@@ -1,5 +1,6 @@
 #include "overtrust/graph.hpp"
 
+#include <filesystem>
 #include <algorithm>
 #include <sstream>
 #include <queue>
@@ -261,7 +262,7 @@ TrustGraph build_trust_graph(const std::vector<Finding>& findings) {
         else if (f.rule_id.substr(0, 6) == "DOCKER") kind = NodeKind::Package;
 
         // Short label from last path component
-        std::string label = f.file.substr(f.file.rfind('/') + 1);
+        std::string label = std::filesystem::path(f.file).filename().string();
 
         GraphNode node;
         node.id         = node_id;
