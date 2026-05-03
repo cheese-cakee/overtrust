@@ -3,7 +3,15 @@
 #include <thread>
 #include <filesystem>
 #include <atomic>
-#include <unistd.h>
+
+// TTY detection — cross-platform
+#ifdef _WIN32
+#  include <io.h>
+#  define IS_TTY() (_isatty(_fileno(stdout)) != 0)
+#else
+#  include <unistd.h>
+#  define IS_TTY() (isatty(STDOUT_FILENO) != 0)
+#endif
 
 #include "overtrust/version.hpp"
 #include "overtrust/engine.hpp"
@@ -111,6 +119,9 @@ int main(int argc, char** argv) {
 
     if (target.empty()) {
         const char* home = std::getenv("HOME");
+#ifdef _WIN32
+        if (!home) home = std::getenv("USERPROFILE");
+#endif
         target = home ? home : ".";
     }
 
@@ -123,7 +134,7 @@ int main(int argc, char** argv) {
     }
 
     // ── Headless mode if not a TTY or --no-tui ─────────────────────────────
-    if (force_no_tui || !isatty(STDOUT_FILENO)) {
+    if (force_no_tui || !IS_TTY()) {
         return run_headless(target);
     }
 
