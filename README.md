@@ -2,10 +2,10 @@
 <pre align="center">
  ██████╗ ██╗   ██╗███████╗██████╗ ████████╗██████╗ ██╗   ██╗███████╗████████╗
 ██╔═══██╗██║   ██║██╔════╝██╔══██╗╚══██╔══╝██╔══██╗██║   ██║██╔════╝╚══██╔══╝
-██║   ██║██║   ██║█████╗  ██████╔╝   ██║   ██████╔╝██║   ██║███████╗   ██║
-██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗   ██║   ██╔══██╗██║   ██║╚════██║   ██║
-╚██████╔╝ ╚████╔╝ ███████╗██║  ██║   ██║   ██║  ██║╚██████╔╝███████║   ██║
- ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝
+██║   ██║██║   ██║█████╗  ██████╔╝   ██║   ██████╔╝██║   ██║███████╗   ██║   
+██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗   ██║   ██╔══██╗██║   ██║╚════██║   ██║   
+╚██████╔╝ ╚████╔╝ ███████╗██║  ██║   ██║   ██║  ██║╚██████╔╝███████║   ██║   
+ ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝  
 </pre>
 </p>
 
@@ -21,20 +21,20 @@
 ---
 
 ```
-┌─ OVERTRUST ─────────────────────────── Trust Score: 34/100 [████░░░░] CRITICAL ─┐
-│                                                                                  │
-├─ Scan Log ──────┬─ Overview ──────────────────┬─ Findings (8) ──────────────────┤
-│ .env            │   [SYSTEM]                  │ [CRIT] AWS credentials file [9] │
-│ credentials     │   ├── [CRIT] .env file  [9] │ [CRIT] Anthropic key found  [9] │
-│ package.json    │   ├── [HIGH] ai-helper   [8] │ [HIGH] Extension terminal   [8] │
-│ Dockerfile      │   └── [MED]  Dockerfile  [7] │ [HIGH] Debug adapter        [8] │
-│ ✓ Scan complete │                             │ [CRIT] Auth provider        [9] │
-├─ Detail ────────────────────────────────────────────────────────────────────────┤
-│ Rule: EXT-003  │ File: .vscode/extensions/ai-code-helper/package.json           │
-│ Severity: CRITICAL  │  Score: 9.5                                               │
-│ Extension 'ai-code-helper' is an authentication provider                        │
-│ contributes.authentication — can intercept auth tokens                          │
-└──────────────────────────────────────────────────────────────────────────────────┘
+┌─ OVERTRUST ───────────────────────── Trust Score: 34/100 [████░░░░] CRITICAL ─┐
+│                                                                               │
+├─ Scan Log ─────┬─ Overview ─────────────────┬─ Findings (8) ──────────────────┤
+│ .env           │   [SYSTEM]                 │ [CRIT] AWS credentials  [9]     │
+│ credentials    │   ├─[CRIT] .env    [9]     │ [CRIT] Anthropic key    [9]     │
+│ package.json   │   ├─[HIGH] ai-help  [8]    │ [HIGH] Extension term   [8]     │
+│ Dockerfile     │   └─[MED]  Dockerf  [7]    │ [HIGH] Debug adapter    [8]     │
+│ ✓ Scan done    │                            │ [CRIT] Auth provider    [9]     │
+├─ Detail ──────────────────────────────────────────────────────────────────────┤
+│ Rule: EXT-003  │ File: .vscode/extensions/ai-code-helper/package.json         │
+│ Severity: CRITICAL  │  Score: 9.5                                             │
+│ Extension 'ai-code-helper' is an authentication provider                      │
+│ contributes.authentication — can intercept auth tokens                        │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
