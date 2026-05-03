@@ -1,21 +1,8 @@
 <p align="center">
-<pre align="center">
- ██████╗ ██╗   ██╗███████╗██████╗ ████████╗██████╗ ██╗   ██╗███████╗████████╗
-██╔═══██╗██║   ██║██╔════╝██╔══██╗╚══██╔══╝██╔══██╗██║   ██║██╔════╝╚══██╔══╝
-██║   ██║██║   ██║█████╗  ██████╔╝   ██║   ██████╔╝██║   ██║███████╗   ██║   
-██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗   ██║   ██╔══██╗██║   ██║╚════██║   ██║   
-╚██████╔╝ ╚████╔╝ ███████╗██║  ██║   ██║   ██║  ██║╚██████╔╝███████║   ██║   
- ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝  
-</pre>
-</p>
-
-<p align="center"><a href="https://overtrust.runable.site/"><strong>Overtrust</strong></a> is an AI-era workstation security scanner. Deterministic. No LLMs.
-</p> </p>
-
-<p align="center">
   <img src="https://storage.googleapis.com/runable-templates/cli-uploads%2FH8YZRVcKqo1iYrAhLBkIjhBo6MSmtriB%2FAMVtcE1gT2LdpcqCCsVs0%2Fdemo_real.gif" alt="Overtrust demo" width="800" />
 </p>
-
+<p align="center"><a href="https://overtrust.runable.site/"><strong>Overtrust</strong></a> is an AI-era workstation security scanner. Deterministic. No LLMs.
+</p> </p>
 <p align="center">
   <a href="https://github.com/cheese-cakee/overtrust/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" /></a>
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-informational?style=flat-square" />
