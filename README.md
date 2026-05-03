@@ -9,11 +9,8 @@
 </pre>
 </p>
 
-<p align="center">AI-era workstation security scanner. Deterministic. No LLMs.</p>
-
-<p align="center">
-  <a href="https://overtrust.runable.site/"><strong>🌐 overtrust.runable.site</strong></a>
-</p>
+<p align="center"><a href="https://overtrust.runable.site/"><strong>Overtrust</strong></a> is an AI-era workstation security scanner. Deterministic. No LLMs.
+</p> </p>
 
 <p align="center">
   <img src="https://storage.googleapis.com/runable-templates/cli-uploads%2FH8YZRVcKqo1iYrAhLBkIjhBo6MSmtriB%2FAMVtcE1gT2LdpcqCCsVs0%2Fdemo_real.gif" alt="Overtrust demo" width="800" />
