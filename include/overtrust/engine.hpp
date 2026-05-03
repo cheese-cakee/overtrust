@@ -27,6 +27,7 @@ public:
 
     // Start scanning in background thread
     void start() {
+        running_.store(true);   // set BEFORE spawning thread to avoid is_running() race
         thread_ = std::thread([this] { run(); });
     }
 

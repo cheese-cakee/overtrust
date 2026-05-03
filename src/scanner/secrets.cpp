@@ -29,10 +29,21 @@ double shannon_entropy(const std::string& s) {
 // ── False positive guard ──────────────────────────────────────────────────────
 
 static const std::unordered_set<std::string> FALSE_POSITIVE_TOKENS = {
+    // Generic placeholders
     "example", "dummy", "test123", "your-key-here", "xxxxxxxxxxx",
     "changeme", "placeholder", "YOUR_KEY", "YOUR_SECRET",
-    "AKIAIOSFODNN7EXAMPLE", // AWS docs example
+    "INSERT_KEY_HERE", "REPLACE_ME",
+    // AWS documentation examples
+    "AKIAIOSFODNN7EXAMPLE",
     "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    // GitHub documentation examples
+    "ghp_16C7e42F292c6912E7710c838347Ae178B4a",
+    // OpenAI / Anthropic docs placeholders
+    "sk-xxxx", "sk-ant-xxxx",
+    // Stripe docs (partial prefix only — full key triggers push protection)
+    "sk_test_4eC39Hq",
+    // Common test strings
+    "password123", "supersecret", "mysecretkey",
 };
 
 static bool is_false_positive(const std::string& match) {
@@ -127,6 +138,99 @@ static const Pattern PATTERNS[] = {
       "secret",
       R"((?:secret|password|passwd|token|api_key|apikey|access_key)\s*[=:]\s*['\"]?([A-Za-z0-9+/=_\-]{20,})['\"]?)",
       6.0, Severity::Medium, 3.8 },
+
+    // Azure
+    { "SEC-014", "Azure Storage Account Key",
+      "AccountKey=",
+      R"(AccountKey=[A-Za-z0-9+/]{86}==)",
+      9.0, Severity::Critical, 4.5 },
+
+    { "SEC-015", "Azure Connection String",
+      "DefaultEndpointsProtocol",
+      R"(DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[A-Za-z0-9+/]{86}==)",
+      9.0, Severity::Critical, 0.0 },
+
+    // Twilio
+    { "SEC-016", "Twilio Account SID",
+      "AC",
+      R"(\bAC[a-f0-9]{32}\b)",
+      7.0, Severity::High, 3.0 },
+
+    { "SEC-017", "Twilio Auth Token",
+      "twilio",
+      R"((?:twilio[_\-]?(?:auth[_\-]?)?token|TWILIO_AUTH_TOKEN)\s*[=:]\s*['\"]?([a-f0-9]{32})['\"]?)",
+      8.5, Severity::High, 3.5 },
+
+    // SendGrid / Mailgun
+    { "SEC-018", "SendGrid API Key",
+      "SG.",
+      R"(SG\.[A-Za-z0-9_\-]{22}\.[A-Za-z0-9_\-]{43})",
+      9.0, Severity::Critical, 4.0 },
+
+    { "SEC-019", "Mailgun API Key",
+      "key-",
+      R"(key-[0-9a-f]{32})",
+      8.5, Severity::High, 3.5 },
+
+    // HashiCorp Vault
+    { "SEC-020", "HashiCorp Vault Token",
+      "hvs.",
+      R"(hvs\.[A-Za-z0-9]{24,})",
+      9.0, Severity::Critical, 4.0 },
+
+    // Telegram
+    { "SEC-021", "Telegram Bot Token",
+      "bot",
+      R"(\b[0-9]{8,10}:[A-Za-z0-9_\-]{35}\b)",
+      8.0, Severity::High, 3.5 },
+
+    // npm auth token
+    { "SEC-022", "npm Auth Token",
+      "npm_",
+      R"(npm_[A-Za-z0-9]{36})",
+      8.5, Severity::High, 4.0 },
+
+    // PyPI token
+    { "SEC-023", "PyPI API Token",
+      "pypi-",
+      R"(pypi-[A-Za-z0-9_\-]{40,})",
+      8.5, Severity::High, 4.0 },
+
+    // Databricks
+    { "SEC-024", "Databricks Access Token",
+      "dapi",
+      R"(dapi[a-f0-9]{32})",
+      8.5, Severity::High, 3.5 },
+
+    // Cloudflare
+    { "SEC-025", "Cloudflare API Token",
+      "cloudflare",
+      R"((?:cloudflare[_\-]?(?:api[_\-]?)?token|CF_API_TOKEN)\s*[=:]\s*['\"]?([A-Za-z0-9_\-]{40})['\"]?)",
+      8.5, Severity::High, 4.0 },
+
+    // GCP Service Account JSON (detect inline or file reference)
+    { "SEC-026", "GCP Service Account Key",
+      "\"type\": \"service_account\"",
+      R"(\"type\"\s*:\s*\"service_account\")",
+      9.5, Severity::Critical, 0.0 },
+
+    // JWT tokens
+    { "SEC-027", "JSON Web Token",
+      "eyJ",
+      R"(eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})",
+      6.5, Severity::Medium, 4.0 },
+
+    // Private SSH key (openssh format)
+    { "SEC-028", "OpenSSH Private Key",
+      "BEGIN OPENSSH",
+      R"(-----BEGIN OPENSSH PRIVATE KEY-----)",
+      9.5, Severity::Critical, 0.0 },
+
+    // Generic bearer tokens in config
+    { "SEC-029", "Bearer Token in Config",
+      "Bearer ",
+      R"(Authorization\s*[=:]\s*['\"]?Bearer\s+([A-Za-z0-9+/=_\-\.]{20,})['\"]?)",
+      7.0, Severity::High, 4.0 },
 };
 // clang-format on
 
@@ -165,18 +269,15 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
                 for (; it != end; ++it) {
                     std::string matched = (*it)[0].str();
 
-                    // Phase 3: entropy check
+                    // Phase 3: entropy check on the full matched token
                     if (pat.min_entropy > 0.0) {
-                        // Use the last "word" token as the high-entropy candidate
-                        std::string token = matched.size() > 12
-                                          ? matched.substr(matched.size() - 16)
-                                          : matched;
-                        if (shannon_entropy(token) < pat.min_entropy)
+                        if (shannon_entropy(matched) < pat.min_entropy)
                             continue;
                     }
 
                     // Phase 4: false positive exclusion
-                    if (is_false_positive(matched)) continue;
+                    bool fp = is_false_positive(matched);
+                    if (fp) continue;
 
                     // Build redacted display string
                     std::string display = matched.size() > 8

@@ -25,7 +25,7 @@ static std::string read_text_file(const fs::path& path,
 }
 
 void ScanEngine::run() {
-    running_.store(true);
+    // running_ was already set to true by start() before thread spawn
 
     std::vector<Finding> all_findings;
     std::mutex findings_mu;
@@ -105,10 +105,39 @@ void ScanEngine::run() {
                 break;
         }
 
+        // Emit a finding for shell history exposure
+        if (kind == FileKind::ShellHistory) {
+            Finding f;
+            f.id       = "F-shellhist-" + pstr.substr(pstr.rfind('/') + 1);
+            f.rule_id  = "FILE-003";
+            f.severity = Severity::Medium;
+            f.file     = pstr;
+            f.message  = "Shell history file accessible: " + pstr.substr(pstr.rfind('/') + 1);
+            f.score    = 4.5;
+            f.evidence = "History files may contain secrets typed in plain text";
+            emit(f);
+        }
+
+        // Emit finding for kubeconfig (may contain cluster tokens)
+        if (kind == FileKind::KubeConfig) {
+            Finding f;
+            f.id       = "F-kubeconfig";
+            f.rule_id  = "FILE-004";
+            f.severity = Severity::High;
+            f.file     = pstr;
+            f.message  = "Kubernetes config found";
+            f.score    = 7.0;
+            f.evidence = "kubeconfig may contain cluster credentials and bearer tokens";
+            emit(f);
+        }
+
         // Secret detection on text files
-        if (kind == FileKind::TextFile   || kind == FileKind::DotEnv     ||
-            kind == FileKind::ShellScript || kind == FileKind::SshKey    ||
-            kind == FileKind::AwsCredentials || kind == FileKind::GitConfig)
+        if (kind == FileKind::TextFile    || kind == FileKind::DotEnv        ||
+            kind == FileKind::ShellScript  || kind == FileKind::SshKey       ||
+            kind == FileKind::AwsCredentials || kind == FileKind::GitConfig  ||
+            kind == FileKind::ShellHistory || kind == FileKind::YamlConfig   ||
+            kind == FileKind::TomlConfig   || kind == FileKind::JsonConfig   ||
+            kind == FileKind::XmlConfig    || kind == FileKind::KubeConfig)
         {
             std::string content = read_text_file(path);
             if (!content.empty()) {

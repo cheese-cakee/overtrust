@@ -50,7 +50,9 @@ FileKind classify_file(const fs::path& path) {
         return FileKind::Dockerfile;
 
     // ── .env files ──────────────────────────────────────────────────────────
-    if (name == ".env" || (name.size() > 4 && name.substr(0, 4) == ".env"))
+    // .env, .env.local, .env.production, prod.env, secrets.env, etc.
+    if (name == ".env" || (name.size() > 4 && name.substr(0, 4) == ".env") ||
+        ends_with(name, ".env"))
         return FileKind::DotEnv;
 
     // ── AWS credentials ─────────────────────────────────────────────────────
@@ -107,10 +109,24 @@ FileKind classify_file(const fs::path& path) {
         magic[1] == SHEBANG[1])
         return FileKind::ShellScript;
 
+    // ── Kubernetes config ───────────────────────────────────────────────────
+    if (path_contains(pathstr, "/.kube/") && name == "config")
+        return FileKind::KubeConfig;
+
+    // ── YAML / TOML / JSON / XML config files ──────────────────────────────
+    if (ends_with(name, ".yaml") || ends_with(name, ".yml"))
+        return FileKind::YamlConfig;
+    if (ends_with(name, ".toml"))
+        return FileKind::TomlConfig;
+    if (ends_with(name, ".json"))
+        return FileKind::JsonConfig;
+    if (ends_with(name, ".xml"))
+        return FileKind::XmlConfig;
+
     // ── Extension-based text heuristics ────────────────────────────────────
     static const std::vector<std::string> TEXT_EXTS = {
-        ".txt", ".md", ".yaml", ".yml", ".toml", ".ini", ".cfg",
-        ".conf", ".json", ".xml", ".sh", ".bash", ".zsh", ".fish",
+        ".txt", ".md", ".ini", ".cfg", ".conf",
+        ".sh", ".bash", ".zsh", ".fish",
         ".py", ".rb", ".pl", ".js", ".ts", ".go", ".rs", ".c", ".cpp",
         ".h", ".hpp", ".java", ".kt", ".swift", ".cs", ".html", ".css",
     };
@@ -133,6 +149,11 @@ const char* file_kind_str(FileKind k) {
         case FileKind::SshKey:           return "ssh-key";
         case FileKind::GitConfig:        return "git-config";
         case FileKind::ShellHistory:     return "shell-history";
+        case FileKind::YamlConfig:       return "yaml";
+        case FileKind::TomlConfig:       return "toml";
+        case FileKind::JsonConfig:       return "json";
+        case FileKind::XmlConfig:        return "xml";
+        case FileKind::KubeConfig:       return "kubeconfig";
         case FileKind::ElfBinary:        return "elf";
         case FileKind::ShellScript:      return "shell-script";
         case FileKind::TextFile:         return "text";
@@ -153,6 +174,12 @@ bool is_interesting(FileKind k) {
         case FileKind::SshKey:
         case FileKind::GitConfig:
         case FileKind::ShellScript:
+        case FileKind::ShellHistory:
+        case FileKind::YamlConfig:
+        case FileKind::TomlConfig:
+        case FileKind::JsonConfig:
+        case FileKind::XmlConfig:
+        case FileKind::KubeConfig:
         case FileKind::TextFile:
             return true;
         default:

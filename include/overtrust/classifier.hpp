@@ -24,6 +24,12 @@ enum class FileKind {
     SshKey,            // id_rsa, id_ed25519, *.pem, *.key (private)
     GitConfig,         // .gitconfig, .git/config
     ShellHistory,      // .bash_history, .zsh_history
+    // Config formats (may embed secrets)
+    YamlConfig,        // *.yml, *.yaml
+    TomlConfig,        // *.toml
+    JsonConfig,        // *.json (non-manifest)
+    XmlConfig,         // *.xml (non-manifest)
+    KubeConfig,        // ~/.kube/config
     // Executables / binaries
     ElfBinary,
     ShellScript,
