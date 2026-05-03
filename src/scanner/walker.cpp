@@ -6,7 +6,8 @@ namespace overtrust {
 
 void walk_directory(const fs::path& root,
                     std::vector<fs::path>& out,
-                    std::atomic<std::size_t>& total)
+                    std::atomic<std::size_t>& total,
+                    const std::set<std::string>& ignore_patterns)
 {
     std::error_code ec;
 
@@ -35,7 +36,7 @@ void walk_directory(const fs::path& root,
         }
 
         if (fs::is_directory(entry.status(ec))) {
-            if (should_skip(entry.path())) {
+            if (should_skip(entry.path(), ignore_patterns)) {
                 it.disable_recursion_pending();
             }
             continue;

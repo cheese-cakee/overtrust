@@ -76,6 +76,33 @@ static std::string basename(const std::string& path) {
     return path.substr(pos + 1);
 }
 
+// Check if a process is a known-safe Windows system binary
+// (runs from System32, SysWOW64, or is a well-known system utility)
+static bool is_safe_system_process(const ProcessInfo& p) {
+    static const std::vector<std::string> safe_names = {
+        "svchost.exe", "csrss.exe", "wininit.exe", "winlogon.exe",
+        "services.exe", "lsass.exe", "smss.exe", "spoolsv.exe",
+        "dwm.exe", "fontdrvhost.exe", "SearchIndexer.exe", "WmiPrvSE.exe",
+        "RuntimeBroker.exe", "sihost.exe", "taskhostw.exe", "ctfmon.exe",
+        "ShellExperienceHost.exe", "StartMenuExperienceHost.exe",
+        "TextInputHost.exe", "ApplicationFrameHost.exe",
+        "SystemSettings.exe", "SecurityHealthSystray.exe",
+        "SecurityHealthService.exe", "wlms.exe", "conhost.exe",
+    };
+
+    for (auto& sn : safe_names) {
+        if (_stricmp(p.name.c_str(), sn.c_str()) == 0) return true;
+    }
+
+    // Anything in System32 or SysWOW64 is a signed Microsoft binary
+    std::string lower_path = p.cmdline;
+    std::transform(lower_path.begin(), lower_path.end(), lower_path.begin(), ::tolower);
+    if (lower_path.find("\\system32\\") != std::string::npos) return true;
+    if (lower_path.find("\\syswow64\\") != std::string::npos) return true;
+
+    return false;
+}
+
 // Check if the process token is elevated (UAC high integrity level / full admin token)
 static bool check_elevation(HANDLE hProc) {
     HANDLE hTok = nullptr;
@@ -157,6 +184,9 @@ std::vector<Finding> score_process(const ProcessInfo& p) {
 
     // Skip the System and Idle pseudo-processes
     if (p.pid == 0 || p.pid == 4) return out;
+
+    // Skip known-safe Microsoft-signed system binaries
+    if (is_safe_system_process(p)) return out;
 
     auto add = [&](const char* rule, Severity sev, double score,
                    std::string msg, std::string ev = "") {

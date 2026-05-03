@@ -53,13 +53,14 @@ inline Element trust_score_bar(int score, bool scanning) {
 
 inline Element finding_row(const Finding& f, bool selected) {
     Color c = severity_color(f.severity);
-    std::string score_str = std::to_string(static_cast<int>(f.score * 10) / 10);
+    char score_buf[16];
+    snprintf(score_buf, sizeof(score_buf), "%.1f", f.score);
 
     auto row = hbox({
         text(std::string("[") + severity_str(f.severity) + "] ") | color(c) | bold,
-        text(f.message.substr(0, 35)) | (selected ? bold : dim),
+        text(f.message.substr(0, 38)) | (selected ? bold : dim),
         filler(),
-        text(" [" + std::to_string((int)f.score) + "] ") | color(c),
+        text(" [" + std::string(score_buf) + "] ") | color(c),
     });
 
     if (selected)

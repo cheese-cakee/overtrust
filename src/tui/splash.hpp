@@ -2,6 +2,7 @@
 
 #include <ftxui/dom/elements.hpp>
 #include <string>
+#include "overtrust/version.hpp"
 
 namespace overtrust::tui {
 
@@ -24,7 +25,7 @@ inline ftxui::Element render_splash() {
     }
     lines.push_back(separator());
     lines.push_back(
-        text("  AI-era workstation security scanner  ·  v0.1.0  ·  MIT")
+        text("  AI-era workstation security scanner  ·  v" + std::string(overtrust::VERSION) + "  ·  MIT")
         | color(Color::GrayLight)
     );
     lines.push_back(filler());

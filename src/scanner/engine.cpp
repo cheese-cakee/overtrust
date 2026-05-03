@@ -48,7 +48,8 @@ void ScanEngine::run() {
 
     // ── Phase 1: Walk filesystem ──────────────────────────────────────────────
     std::vector<fs::path> files;
-    walk_directory(fs::path(target_), files, total);
+    auto ignore_patterns = load_ignore_patterns(target_);
+    walk_directory(fs::path(target_), files, total, ignore_patterns);
 
     if (callbacks_.on_progress)
         callbacks_.on_progress(0, total.load());
@@ -147,7 +148,8 @@ void ScanEngine::run() {
             kind == FileKind::AwsCredentials || kind == FileKind::GitConfig  ||
             kind == FileKind::ShellHistory || kind == FileKind::YamlConfig   ||
             kind == FileKind::TomlConfig   || kind == FileKind::JsonConfig   ||
-            kind == FileKind::XmlConfig    || kind == FileKind::KubeConfig)
+            kind == FileKind::XmlConfig    || kind == FileKind::KubeConfig   ||
+            kind == FileKind::JetBrainsPlugin || kind == FileKind::PipRequirements)
         {
             std::string content = read_text_file(path);
             if (!content.empty()) {

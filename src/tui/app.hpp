@@ -51,6 +51,26 @@ public:
 
     void start_scanning() { scanning_.store(true); }
 
+    void stop_scanning() { scanning_.store(false); }
+
+    bool rescan_requested() const { return should_rescan_.load(); }
+
+    bool export_requested() const { return should_export_.load(); }
+
+    std::string export_path() const { return export_path_; }
+
+    void reset() {
+        std::lock_guard<std::mutex> lk(mu_);
+        state_ = ScanState{};
+        scanning_.store(true);
+        exit_flag_.store(false);
+        should_rescan_.store(false);
+        should_export_.store(false);
+    }
+
+    const std::vector<Finding>& findings() const { return state_.findings; }
+    int trust_score() const { return state_.trust_score; }
+
     int run() {
         auto screen = ScreenInteractive::Fullscreen();
         screen_ = &screen;
@@ -229,6 +249,20 @@ public:
             }
             if (ev == Event::Character('?')) { show_help = !show_help; return true; }
             if (ev == Event::Character('v')) { show_graph = !show_graph; return true; }
+            if (ev == Event::Character('e')) {
+                std::time_t t = std::time(nullptr);
+                export_path_ = "overtrust-report-" + std::to_string(t) + ".json";
+                should_export_.store(true);
+                exit_flag_.store(true);
+                screen.ExitLoopClosure()();
+                return true;
+            }
+            if (ev == Event::Character('r')) {
+                should_rescan_.store(true);
+                exit_flag_.store(true);
+                screen.ExitLoopClosure()();
+                return true;
+            }
 
             // Navigation
             {
@@ -296,6 +330,9 @@ private:
     std::mutex  mu_;
     std::atomic<bool> scanning_{false};
     std::atomic<bool> exit_flag_{false};
+    std::atomic<bool> should_rescan_{false};
+    std::atomic<bool> should_export_{false};
+    std::string export_path_;
     ScreenInteractive* screen_ = nullptr;
 };
 
