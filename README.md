@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://storage.googleapis.com/runable-templates/cli-uploads%2FH8YZRVcKqo1iYrAhLBkIjhBo6MSmtriB%2FAMVtcE1gT2LdpcqCCsVs0%2Fdemo_real.gif" alt="Overtrust demo" width="800" />
 </p>
-<p align="center"><a href="https://overtrust.runable.site/"><strong>Overtrust</strong></a> is an AI-era workstation security scanner. Deterministic. No LLMs.
+<p align="center">Overtrust is an AInera workstation security scanner. Deterministic. No LLMs.
 </p> </p>
 <p align="center">
   <a href="https://github.com/cheese-cakee/overtrust/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" /></a>
@@ -226,7 +226,7 @@ include/overtrust/
 | Component | Library | Why |
 |-----------|---------|-----|
 | TUI | [FTXUI v5](https://github.com/ArthurSonzogni/FTXUI) | Declarative, beautiful, active maintenance |
-| JSON | [nlohmann/json v3.11](https://github.com/nlohmann/json) | Single-header, zero drama |
+| JSON | [nlohmann/json v3.11](https://github.com/nlohmann/json) | Single header, zero drama |
 | Rules | Hardcoded C++ | Zero deps, deterministic, no YAML parse attack surface |
 | Filesystem | `std::filesystem` (C++17) | No deps, recursive walk with permission skip |
 | Processes (Linux) | `/proc` pseudo-FS | Zero kernel modules, read-only |
@@ -239,7 +239,7 @@ include/overtrust/
 
 #### Does it require root / admin?
 
-No. Overtrust only reads files and `/proc` entries it already has permission to access. Anything it can't read is silently skipped. On Windows, process enumeration works without elevation — privilege details for protected processes are simply omitted.
+No. Overtrust only reads files and `/proc` entries it already has permission to access. Anything it can't read is silently skipped. On Windows, process enumeration works without elevation, privilege details for protected processes are simply omitted.
 
 #### Is any data sent anywhere?
 
@@ -260,7 +260,7 @@ Those tools find secrets in code. Overtrust finds what already has *access* to y
 
 ### Contributing
 
-PRs welcome. Read the code first — it's small and well-commented.
+PRs welcome. Read the code first, it's small and well-commented.
 
 ---
 
