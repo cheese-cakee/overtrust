@@ -271,9 +271,23 @@ std::vector<Finding> score_npm_pkg(const NpmManifest& m,
     std::string pkg = m.name.empty() ? "unknown" : m.name;
 
     for (auto& sus : m.suspicious_scripts) {
-        add("NPM-001", Severity::Critical, 9.0,
-            "Package '" + pkg + "' has a suspicious install script",
-            sus);
+        // sus is "hookname: command" — extract the hook name so each script
+        // type gets its own rule ID.  When a package has both a suspicious
+        // preinstall and postinstall, two NPM-001 findings with identical
+        // rule_ids made them indistinguishable in reports.
+        auto colon_pos = sus.find(':');
+        std::string hook = (colon_pos != std::string::npos)
+                           ? sus.substr(0, colon_pos)
+                           : "script";
+        Finding f;
+        f.id       = next_id();
+        f.rule_id  = "NPM-001-" + hook;
+        f.severity = Severity::Critical;
+        f.file     = file;
+        f.message  = "Package '" + pkg + "' has a suspicious " + hook + " script";
+        f.score    = 9.0;
+        f.evidence = sus;
+        out.push_back(std::move(f));
     }
 
     if (m.has_preinstall && m.suspicious_scripts.empty())
