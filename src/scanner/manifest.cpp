@@ -125,14 +125,33 @@ DockerfileManifest parse_dockerfile(const fs::path& path) {
 
     m.runs_as_root = true; // assume root unless USER is set
 
-    std::string line;
-    while (std::getline(f, line)) {
-        // trim
+    // Join logical lines: a line ending with \ is continued on the next line.
+    // We collect raw physical lines, merge continuations, then parse instructions.
+    std::vector<std::string> logical_lines;
+    {
+        std::string raw;
+        std::string acc;
+        while (std::getline(f, raw)) {
+            // Trim trailing whitespace including \r
+            while (!raw.empty() && (raw.back() == ' ' || raw.back() == '\t' || raw.back() == '\r'))
+                raw.pop_back();
+            if (!raw.empty() && raw.back() == '\\') {
+                acc += raw.substr(0, raw.size() - 1) + ' ';
+            } else {
+                acc += raw;
+                logical_lines.push_back(acc);
+                acc.clear();
+            }
+        }
+        if (!acc.empty()) logical_lines.push_back(acc);
+    }
+
+    for (auto& line : logical_lines) {
+        // trim leading whitespace
         auto start = line.find_first_not_of(" \t");
         if (start == std::string::npos) continue;
         line = line.substr(start);
 
-        // Continuation lines — ignore for simplicity
         if (line.empty() || line[0] == '#') continue;
 
         std::string upper = line;
@@ -157,7 +176,7 @@ DockerfileManifest parse_dockerfile(const fs::path& path) {
         else if (upper.substr(0, 4) == "RUN ") {
             std::string cmd = line.substr(4);
             m.run_cmds.push_back(cmd);
-            // Check for curl | bash patterns
+            // Check for curl | bash across the now-joined logical line
             if (cmd.find("curl") != std::string::npos &&
                 (cmd.find("| bash") != std::string::npos ||
                  cmd.find("|bash")  != std::string::npos ||
