@@ -158,7 +158,7 @@ static const Pattern PATTERNS[] = {
 
     // Twilio
     { "SEC-016", "Twilio Account SID",
-      "AC",
+      "",
       R"(\bAC[a-f0-9]{32}\b)",
       7.0, Severity::High, 3.0 },
 
@@ -185,8 +185,13 @@ static const Pattern PATTERNS[] = {
       9.0, Severity::Critical, 4.0 },
 
     // Telegram
+    // The token format is <digits>:<chars> — "bot" does not appear in the
+    // token itself, so the old keyword caused false negatives for any file
+    // that held a Telegram token but did not contain the word "bot".
+    // Using "" (empty) means the file-level check always passes and the
+    // distinctive regex handles filtering.
     { "SEC-021", "Telegram Bot Token",
-      "bot",
+      "",
       R"(\b[0-9]{8,10}:[A-Za-z0-9_\-]{35}\b)",
       8.0, Severity::High, 3.5 },
 
@@ -327,10 +332,13 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
                         if (in_string) continue;
                     }
 
-                    // Dedup: same secret value on same line from different patterns
+                    // Dedup: same rule, same line, same matched value.
+                    // Previously used only the first 12 chars of the match, so
+                    // two different secrets on the same line sharing a common
+                    // 12-char prefix would be incorrectly merged into one finding.
                     std::string dedup_key = std::string(pat.rule_id) + ":" +
                                             std::to_string(ln) + ":" +
-                                            matched.substr(0, std::min(matched.size(), std::size_t(12)));
+                                            matched;
                     if (!seen.insert(dedup_key).second) continue;
 
                     // Build redacted display string
