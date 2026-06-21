@@ -293,9 +293,18 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
                 for (; it != end; ++it) {
                     std::string matched = (*it)[0].str();
 
-                    // Phase 3: entropy check on the full matched token
+                    // Phase 3: entropy check.
+                    // For patterns with a capture group (e.g. SEC-013 captures
+                    // the value after "secret="), measure entropy on the
+                    // captured secret value only.  Measuring the full match
+                    // (group 0) dilutes entropy with the low-entropy keyword
+                    // prefix and can cause real secrets to be filtered out.
                     if (pat.min_entropy > 0.0) {
-                        if (shannon_entropy(matched) < pat.min_entropy)
+                        const std::string& entropy_target =
+                            (it->size() > 1 && (*it)[1].matched)
+                            ? (*it)[1].str()
+                            : matched;
+                        if (shannon_entropy(entropy_target) < pat.min_entropy)
                             continue;
                     }
 
