@@ -144,10 +144,12 @@ DockerfileManifest parse_dockerfile(const fs::path& path) {
             auto colon = img.find(':');
             m.base_image = colon != std::string::npos ? img.substr(0, colon) : img;
         }
-        else if (upper.substr(0, 4) == "USER") {
+        else if (upper.substr(0, 5) == "USER ") {
             std::string user = line.substr(5);
             std::transform(user.begin(), user.end(), user.begin(), ::tolower);
-            m.runs_as_root = (user.find("root") != std::string::npos || user == "0");
+            // Strip optional :gid suffix so "0:0" is treated the same as "0"
+            std::string uid = user.substr(0, user.find(':'));
+            m.runs_as_root = (user.find("root") != std::string::npos || uid == "0");
         }
         else if (upper.substr(0, 4) == "ENV ") {
             m.env_vars.push_back(line.substr(4));
