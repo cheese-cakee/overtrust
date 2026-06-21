@@ -96,52 +96,70 @@ std::unordered_set<std::string> TrustGraph::permission_closure(const std::string
     return perms;
 }
 
-// ── Tarjan SCC ────────────────────────────────────────────────────────────────
-
-void TrustGraph::tarjan_dfs(
-    const std::string& v,
-    std::unordered_map<std::string, int>& index,
-    std::unordered_map<std::string, int>& lowlink,
-    std::unordered_map<std::string, bool>& on_stack,
-    std::vector<std::string>& stack,
-    int& idx_counter,
-    std::vector<std::vector<std::string>>& sccs) const
-{
-    index[v] = lowlink[v] = idx_counter++;
-    stack.push_back(v);
-    on_stack[v] = true;
-
-    for (auto& nb : neighbors(v)) {
-        if (!index.count(nb)) {
-            tarjan_dfs(nb, index, lowlink, on_stack, stack, idx_counter, sccs);
-            lowlink[v] = std::min(lowlink[v], lowlink[nb]);
-        } else if (on_stack.count(nb) && on_stack.at(nb)) {
-            lowlink[v] = std::min(lowlink[v], index[nb]);
-        }
-    }
-
-    if (lowlink[v] == index[v]) {
-        std::vector<std::string> scc;
-        while (true) {
-            std::string w = stack.back(); stack.pop_back();
-            on_stack[w] = false;
-            scc.push_back(w);
-            if (w == v) break;
-        }
-        if (scc.size() > 1) sccs.push_back(std::move(scc));
-    }
-}
+// ── Tarjan SCC (iterative) ────────────────────────────────────────────────────
+// The recursive formulation overflowed the call stack on graphs with thousands
+// of nodes (e.g. large npm dependency trees).  This iterative version uses an
+// explicit worklist and is otherwise algorithmically identical.
 
 std::vector<std::vector<std::string>> TrustGraph::detect_cycles() const {
-    std::unordered_map<std::string, int>  index, lowlink;
-    std::unordered_map<std::string, bool> on_stack;
-    std::vector<std::string> stack;
+    std::unordered_map<std::string, int>  disc, low;
+    std::unordered_map<std::string, bool> on_scc_stack;
+    std::vector<std::string>              scc_stack;
     std::vector<std::vector<std::string>> sccs;
-    int idx_counter = 0;
+    int counter = 0;
+
+    // Worklist frame: the node being visited and the index of the next
+    // neighbor to process (so we can resume after a "recursive" call returns).
+    struct Frame {
+        std::string              node;
+        std::vector<std::string> nbrs;
+        std::size_t              nb_idx = 0;
+    };
+    std::vector<Frame> call_stack;
+
+    auto start_node = [&](const std::string& v) {
+        disc[v] = low[v] = counter++;
+        scc_stack.push_back(v);
+        on_scc_stack[v] = true;
+        call_stack.push_back({v, neighbors(v), 0});
+    };
 
     for (auto& node : nodes_) {
-        if (!index.count(node.id))
-            tarjan_dfs(node.id, index, lowlink, on_stack, stack, idx_counter, sccs);
+        if (disc.count(node.id)) continue;
+        start_node(node.id);
+
+        while (!call_stack.empty()) {
+            Frame& fr = call_stack.back();
+
+            if (fr.nb_idx < fr.nbrs.size()) {
+                const std::string& nb = fr.nbrs[fr.nb_idx++];
+                if (!disc.count(nb)) {
+                    start_node(nb);
+                } else if (on_scc_stack.count(nb) && on_scc_stack[nb]) {
+                    low[fr.node] = std::min(low[fr.node], disc[nb]);
+                }
+            } else {
+                // All neighbours visited — finalise this frame.
+                std::string v = fr.node;
+                call_stack.pop_back();
+
+                // Propagate lowlink to parent.
+                if (!call_stack.empty())
+                    low[call_stack.back().node] = std::min(low[call_stack.back().node], low[v]);
+
+                // v is an SCC root when low[v] == disc[v].
+                if (low[v] == disc[v]) {
+                    std::vector<std::string> scc;
+                    while (true) {
+                        std::string w = scc_stack.back(); scc_stack.pop_back();
+                        on_scc_stack[w] = false;
+                        scc.push_back(w);
+                        if (w == v) break;
+                    }
+                    if (scc.size() > 1) sccs.push_back(std::move(scc));
+                }
+            }
+        }
     }
     return sccs;
 }

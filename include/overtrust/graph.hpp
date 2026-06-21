@@ -94,15 +94,6 @@ private:
     std::vector<GraphEdge>                              edges_;
     std::unordered_map<std::string, std::size_t>        id_to_idx_;   // id → nodes_ index
     std::unordered_map<std::string, std::vector<std::string>> adj_;   // adjacency list
-
-    // Tarjan internals
-    void tarjan_dfs(const std::string& v,
-                    std::unordered_map<std::string, int>& index,
-                    std::unordered_map<std::string, int>& lowlink,
-                    std::unordered_map<std::string, bool>& on_stack,
-                    std::vector<std::string>& stack,
-                    int& idx_counter,
-                    std::vector<std::vector<std::string>>& sccs) const;
 };
 
 // ── Build graph from scan findings ───────────────────────────────────────────
