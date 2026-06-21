@@ -206,13 +206,19 @@ std::vector<std::string> TrustGraph::top_central_nodes(int n) const {
 // ── Risk propagation ──────────────────────────────────────────────────────────
 
 void TrustGraph::propagate_risk() {
-    // Simple: a node inherits the max risk score of nodes it reaches
+    // Snapshot original scores so propagation is order-independent.
+    // Updating in-place while reading caused the result to depend on DFS
+    // traversal order: once node A was raised, subsequent comparisons used
+    // the already-inflated value instead of A's original score.
+    std::unordered_map<std::string, double> original;
+    for (auto& n : nodes_) original[n.id] = n.risk_score;
+
     for (auto& node : nodes_) {
         auto reachable = reachable_from(node.id);
         for (auto& rid : reachable) {
-            auto* rn = get_node(rid);
-            if (rn && rn->risk_score > node.risk_score) {
-                nodes_[id_to_idx_[node.id]].risk_score = rn->risk_score * 0.8;
+            auto it = original.find(rid);
+            if (it != original.end() && it->second > original[node.id]) {
+                nodes_[id_to_idx_[node.id]].risk_score = it->second * 0.8;
             }
         }
     }
@@ -342,13 +348,14 @@ int compute_trust_score(const TrustGraph& g) {
     for (auto& node : g.nodes()) {
         if (node.id == "system" || node.id == "secrets:pool") continue;
 
-        // Classify by rule prefix embedded in node id or severity
-        bool is_proc002 = (node.id.find("/proc/") != std::string::npos &&
-                           node.severity == Severity::Medium);
-        bool is_proc_ai = (node.id.find("/proc/") != std::string::npos &&
-                           node.severity == Severity::Critical);
-        bool is_proc_cap= (node.id.find("/proc/") != std::string::npos &&
-                           node.severity == Severity::High);
+        // Classify by node kind, not by path substring.  The old /proc/ check
+        // broke for any scanned file whose path contained /proc/ (e.g.
+        // /data/proc/credentials.txt) and would misclassify it as process noise.
+        bool is_proc_node = (node.kind == NodeKind::Process);
+
+        bool is_proc002  = is_proc_node && node.severity == Severity::Medium;
+        bool is_proc_ai  = is_proc_node && node.severity == Severity::Critical;
+        bool is_proc_cap = is_proc_node && node.severity == Severity::High;
 
         if (is_proc002) {
             ++noise_proc_cnt;
