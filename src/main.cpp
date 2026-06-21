@@ -109,14 +109,27 @@ static int run_headless(const std::string& target, const std::string& report_pat
     std::cerr << "\n";
 
     // ── stdout JSON ────────────────────────────────────────────────────────
+    // Escape all characters that are invalid inside a JSON string.
+    // The previous version only handled ", \, \n, \r — leaving tabs and
+    // other control characters (0x00-0x1F) unescaped, which produces
+    // invalid JSON when file paths or evidence strings contain them.
     auto esc = [](const std::string& s) {
         std::string r;
-        for (char c : s) {
+        r.reserve(s.size());
+        for (unsigned char c : s) {
             if      (c == '"')  r += "\\\"";
             else if (c == '\\') r += "\\\\";
             else if (c == '\n') r += "\\n";
             else if (c == '\r') r += "\\r";
-            else                r += c;
+            else if (c == '\t') r += "\\t";
+            else if (c < 0x20) {
+                // Other control characters: \u00XX
+                char buf[8];
+                std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+                r += buf;
+            } else {
+                r += static_cast<char>(c);
+            }
         }
         return r;
     };
