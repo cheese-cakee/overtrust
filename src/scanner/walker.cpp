@@ -29,10 +29,17 @@ void walk_directory(const fs::path& root,
 
         auto& entry = *it;
 
-        // Skip symlinks to avoid cycles
+        // For symlinks: disable recursion only when the target is a directory
+        // (to avoid cycles). Symlinked regular files — e.g. dotfiles managed
+        // by GNU stow (~/.ssh/id_rsa -> ~/dotfiles/.ssh/id_rsa) — are real
+        // scan targets and must not be silently skipped.
         if (fs::is_symlink(entry.path(), ec)) {
-            it.disable_recursion_pending();
-            continue;
+            auto target = entry.status(ec); // follows the link
+            if (ec || fs::is_directory(target)) {
+                it.disable_recursion_pending();
+                continue;
+            }
+            // Symlinked regular file: fall through to is_regular_file below.
         }
 
         if (fs::is_directory(entry.status(ec))) {
