@@ -107,7 +107,7 @@ static const Pattern PATTERNS[] = {
 
     { "SEC-007", "OpenAI API Key",
       "sk-",
-      R"(sk-[A-Za-z0-9]{48})",
+      R"(sk-(?:proj|org)-[A-Za-z0-9_\-]{40,}|sk-[A-Za-z0-9]{48})",
       9.0, Severity::Critical, 4.0 },
 
     // Stripe
