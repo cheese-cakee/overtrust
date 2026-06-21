@@ -111,35 +111,33 @@ void ScanEngine::run() {
                 emit(f);
                 break;
             }
+            case FileKind::ShellHistory: {
+                std::string fname = path.filename().string();
+                Finding f;
+                f.id       = "F-shellhist-" + fname;
+                f.rule_id  = "FILE-003";
+                f.severity = Severity::Medium;
+                f.file     = pstr;
+                f.message  = "Shell history file accessible: " + fname;
+                f.score    = 4.5;
+                f.evidence = "History files may contain secrets typed in plain text";
+                emit(f);
+                break;
+            }
+            case FileKind::KubeConfig: {
+                Finding f;
+                f.id       = "F-kubeconfig";
+                f.rule_id  = "FILE-004";
+                f.severity = Severity::High;
+                f.file     = pstr;
+                f.message  = "Kubernetes config found";
+                f.score    = 7.0;
+                f.evidence = "kubeconfig may contain cluster credentials and bearer tokens";
+                emit(f);
+                break;
+            }
             default:
                 break;
-        }
-
-        // Emit a finding for shell history exposure
-        if (kind == FileKind::ShellHistory) {
-            std::string fname = path.filename().string();
-            Finding f;
-            f.id       = "F-shellhist-" + fname;
-            f.rule_id  = "FILE-003";
-            f.severity = Severity::Medium;
-            f.file     = pstr;
-            f.message  = "Shell history file accessible: " + fname;
-            f.score    = 4.5;
-            f.evidence = "History files may contain secrets typed in plain text";
-            emit(f);
-        }
-
-        // Emit finding for kubeconfig (may contain cluster tokens)
-        if (kind == FileKind::KubeConfig) {
-            Finding f;
-            f.id       = "F-kubeconfig";
-            f.rule_id  = "FILE-004";
-            f.severity = Severity::High;
-            f.file     = pstr;
-            f.message  = "Kubernetes config found";
-            f.score    = 7.0;
-            f.evidence = "kubeconfig may contain cluster credentials and bearer tokens";
-            emit(f);
         }
 
         // Secret detection on text files

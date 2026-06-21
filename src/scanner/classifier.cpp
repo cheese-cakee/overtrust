@@ -127,8 +127,13 @@ FileKind classify_file(const fs::path& path) {
         return FileKind::NpmPackageJson;
 
     // ── JetBrains plugin descriptor ─────────────────────────────────────────
+    // Full JetBrains plugin analysis (requested permissions, IDE hooks) is not
+    // yet implemented.  Returning JetBrainsPlugin caused the engine switch to
+    // fall through to default:break with no analysis at all — the FileKind was
+    // inert.  Return XmlConfig instead so the secret scanner runs on the file,
+    // which is the same effective behaviour but without the misleading label.
     if (name == "plugin.xml")
-        return FileKind::JetBrainsPlugin;
+        return FileKind::XmlConfig;
 
     // ── pip requirements ────────────────────────────────────────────────────
     if (name == "requirements.txt")
