@@ -259,9 +259,20 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
         while (std::getline(ss, line)) lines.push_back(line);
     }
 
+    // Lowercase copy of content for case-insensitive keyword pre-filter.
+    // Regex already uses icase; the pre-filter must match that behaviour.
+    std::string content_lower = content;
+    std::transform(content_lower.begin(), content_lower.end(),
+                   content_lower.begin(), ::tolower);
+
     for (auto& pat : PATTERNS) {
-        // Phase 1: keyword pre-filter (fast, avoids regex overhead on large files)
-        if (content.find(pat.keyword) == std::string::npos)
+        // Phase 1: case-insensitive keyword pre-filter (fast, avoids regex
+        // overhead on large files).  The regex uses icase so the pre-filter
+        // must too — otherwise files with AWS_SECRET or SECRET_KEY are
+        // rejected before the regex ever runs.
+        std::string kw_lower = pat.keyword;
+        std::transform(kw_lower.begin(), kw_lower.end(), kw_lower.begin(), ::tolower);
+        if (content_lower.find(kw_lower) == std::string::npos)
             continue;
 
         // Phase 2: regex scan
@@ -271,7 +282,11 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
 
             for (std::size_t ln = 0; ln < lines.size(); ++ln) {
                 auto& line = lines[ln];
-                if (line.find(pat.keyword) == std::string::npos) continue;
+                // Per-line case-insensitive keyword check.
+                std::string line_lower = line;
+                std::transform(line_lower.begin(), line_lower.end(),
+                               line_lower.begin(), ::tolower);
+                if (line_lower.find(kw_lower) == std::string::npos) continue;
 
                 std::sregex_iterator it(line.begin(), line.end(), re);
                 std::sregex_iterator end;
