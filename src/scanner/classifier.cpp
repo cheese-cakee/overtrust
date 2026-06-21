@@ -56,6 +56,21 @@ FileKind classify_file(const fs::path& path) {
         ends_with(name, ".env"))
         return FileKind::DotEnv;
 
+    // ── Credential dotfiles with no extension ──────────────────────────────────
+    // These have no extension and no shebang, so they would fall through to
+    // BinaryFile and be silently skipped. List them explicitly as TextFile so
+    // the secret scanner runs on them.
+    static const std::vector<std::string> CRED_DOTFILES = {
+        ".npmrc",   // npm registry auth tokens (_authToken=)
+        ".netrc",   // FTP / HTTP credentials (machine/login/password)
+        ".pgpass",  // PostgreSQL passwords
+        ".boto",    // AWS Python SDK credentials
+        ".pypirc",  // PyPI upload tokens
+        ".my.cnf",  // MySQL client credentials
+    };
+    for (auto& fn : CRED_DOTFILES)
+        if (name == fn) return FileKind::TextFile;
+
     // ── AWS credentials ─────────────────────────────────────────────────────
     if (path_contains(pathstr, "/.aws/") &&
         (name == "credentials" || name == "config"))
