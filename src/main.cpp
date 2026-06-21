@@ -66,7 +66,7 @@ static void print_usage(const char* prog) {
         << "  --version             Print version\n"
         << "  --no-tui              Run headless, print findings to stdout (JSON)\n"
         << "  --report <file.json>  Write full JSON report to file after scan\n"
-        << "  --exit-code           Exit with code 1 if any findings (CRITICAL/HIGH/MEDIUM)\n";
+        << "  --exit-code           Exit with code 1 if any findings are detected\n";
 }
 
 // ── Shared scan runner ─────────────────────────────────────────────────────────
@@ -183,12 +183,18 @@ int main(int argc, char** argv) {
             exit_code_flag = true;
             continue;
         }
-        if (arg == "--report" && i + 1 < argc) {
+        if (arg == "--report") {
+            if (i + 1 >= argc) {
+                std::cerr << "overtrust: error: --report requires a file path argument\n";
+                return 1;
+            }
             report_path = argv[++i];
             continue;
         }
         if (arg.substr(0, 2) != "--") {
             target = arg;
+        } else {
+            std::cerr << "overtrust: warning: unknown option '" << arg << "' (ignored)\n";
         }
     }
 
