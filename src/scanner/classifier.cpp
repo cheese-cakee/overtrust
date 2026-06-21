@@ -52,6 +52,16 @@ FileKind classify_file(const fs::path& path) {
 
     // ── .env files ──────────────────────────────────────────────────────────
     // .env, .env.local, .env.production, prod.env, secrets.env, etc.
+    // Exclude template/sample files (.env.example, .env.sample, .env.template,
+    // .env.test) — they conventionally contain placeholder values, not real
+    // secrets, and scanning them generates false positives.
+    static const std::vector<std::string> ENV_PLACEHOLDERS = {
+        ".env.example", ".env.sample", ".env.template", ".env.test",
+        ".env.dist",    ".env.default",
+    };
+    for (auto& ph : ENV_PLACEHOLDERS)
+        if (name == ph) return FileKind::TextFile;
+
     if (name == ".env" || (name.size() > 4 && name.substr(0, 4) == ".env") ||
         ends_with(name, ".env"))
         return FileKind::DotEnv;
@@ -77,13 +87,24 @@ FileKind classify_file(const fs::path& path) {
         return FileKind::AwsCredentials;
 
     // ── SSH private keys ────────────────────────────────────────────────────
+    // Only classify as SshKey when the path or filename strongly indicates a
+    // private key.  Broad extension matching (.pem, .key) triggered FILE-001
+    // for every TLS certificate (server.pem), dev cert (localhost.key), or
+    // unrelated config file (config.key) anywhere in the scan tree.
+    // For .pem/.key files outside /.ssh/, return TextFile so the SEC-012
+    // "PEM Private Key" pattern detects them if they actually contain a
+    // private key header — avoiding the unconditional FILE-001 false positive.
     if (path_contains(pathstr, "/.ssh/") ||
         name == "id_rsa" || name == "id_ed25519" || name == "id_ecdsa" ||
-        ends_with(name, ".pem") || ends_with(name, ".key"))
+        name == "id_dsa"  || name == "id_xmss")
     {
-        // Don't flag public keys
         if (!ends_with(name, ".pub"))
             return FileKind::SshKey;
+    }
+
+    if (ends_with(name, ".pem") || ends_with(name, ".key")) {
+        if (!ends_with(name, ".pub"))
+            return FileKind::TextFile;  // SEC-012 fires if content has PRIVATE KEY header
     }
 
     // ── Shell history ────────────────────────────────────────────────────────
