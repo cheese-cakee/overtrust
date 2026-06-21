@@ -313,18 +313,17 @@ std::vector<SecretMatch> scan_for_secrets(const std::string& content,
                     if (fp) continue;
 
                     // Phase 5: source-code context guard for PEM header patterns.
-                    // Real PEM headers appear alone on a line; in source code they're
-                    // inside string literals (R"(...)", "...", regex definitions).
-                    // If the matched line contains raw-string delimiters or the pattern
-                    // is surrounded by quotes, skip it.
+                    // Real PEM headers appear alone on a line; in source code they
+                    // show up inside raw-string literals or regex definitions.
+                    // Only skip when there are clear source-code markers — do NOT
+                    // skip simply because the line contains a quote character, as
+                    // that also matches .env files like PRIVATE_KEY="-----BEGIN…"
+                    // which are real secrets.
                     if (matched.find("-----BEGIN") != std::string::npos) {
                         const auto& src_line = line;
                         bool in_string = src_line.find("R\"(") != std::string::npos
                                       || src_line.find("regex_str") != std::string::npos
-                                      || src_line.find("regex(") != std::string::npos
-                                      || (src_line.find('"') != std::string::npos &&
-                                          src_line.find("-----BEGIN") != std::string::npos &&
-                                          src_line.find("-----END") == std::string::npos);
+                                      || src_line.find("regex(") != std::string::npos;
                         if (in_string) continue;
                     }
 
