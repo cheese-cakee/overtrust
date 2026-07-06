@@ -282,20 +282,20 @@
       <tr>
         <th scope="row">What the memory looks like</th>
         <td class="stash">Ordinary files and pages that anyone can open, check, and fix</td>
-        <td>Machine-managed data; hard to inspect or correct</td>
-        <td>Machine-managed data; hard to inspect or correct</td>
+        <td>Extracted facts, managed through an API</td>
+        <td>Extracted facts, managed through an API</td>
       </tr>
       <tr>
         <th scope="row">Whose memory it is</th>
         <td class="stash">The whole team's, shared</td>
-        <td>One user at a time</td>
-        <td>One user at a time</td>
+        <td>Isolated per user or container</td>
+        <td>Per user, session, or agent</td>
       </tr>
       <tr>
-        <th scope="row">Can it run inside company walls?</th>
-        <td class="stash">Yes. Fully self-hosted, open source</td>
-        <td>Cloud-first</td>
-        <td>Partly; managed platform for the full product</td>
+        <th scope="row">What self-hosting gets you</th>
+        <td class="stash">The full product: workspace, search, agent access</td>
+        <td>A local memory API; the hosted platform is the full product</td>
+        <td>A memory server; the managed platform carries the extras</td>
       </tr>
     </tbody>
   </table>
@@ -313,14 +313,14 @@
       <div class="n">2</div>
       <div>
         <h3>Memory you can open and fix</h3>
-        <p>When Supermemory or Mem0 store a wrong fact, nobody notices until the AI gives a bad answer weeks later. In Stash a wrong memory is a file. Someone opens it, fixes it, and moves on. Companies need that kind of visibility before they will trust a memory product with real work.</p>
+        <p>When Supermemory or Mem0 store a wrong fact, it sits in a database until the AI gives a bad answer. In Stash a wrong memory is a file. Someone opens it, fixes it, and moves on. Companies need that kind of visibility before they will trust a memory product with real work.</p>
       </div>
     </div>
     <div class="reason">
       <div class="n">3</div>
       <div>
         <h3>It keeps what nobody else does</h3>
-        <p>Stash records what a team's agents attempted, what worked, and what got abandoned. Ask any engineer what they most wish they knew: it is usually why the last attempt failed. Stash is the only product of the three that holds on to that.</p>
+        <p>Stash records what a team's agents attempted, what worked, and what got abandoned. Ask any engineer what they most wish they knew: it is usually why the last attempt failed. The other two keep distilled facts; Stash keeps the full record.</p>
       </div>
     </div>
   </div>
@@ -354,7 +354,7 @@
       <div class="arrow">&#8594;</div>
       <div class="proof">
         <h4>Recent performance work you can check</h4>
-        <p><a href="https://github.com/Luce-Org/lucebox-hub/pulls?q=is%3Apr+author%3Acheese-cakee">12 merged PRs at Lucebox</a> (an AI inference startup) over the past few weeks, mostly caching and search-ranking work.</p>
+        <p><a href="https://github.com/Luce-Org/lucebox-hub/pulls?q=is%3Apr+author%3Acheese-cakee+is%3Amerged">11 merged PRs at Lucebox</a> (an AI inference startup) over the past few weeks, across cache eviction, GPU memory paging, and CI hardening.</p>
       </div>
     </div>
     <div class="maprow">
@@ -375,10 +375,14 @@
       </div>
       <div class="arrow">&#8594;</div>
       <div class="proof">
-        <h4>Security fixes merged into major projects</h4>
-        <p>Merged fixes in <a href="https://github.com/ceph/ceph/pull/67984">Ceph</a> and <a href="https://github.com/checkpoint-restore/criu/pull/2916">CRIU</a>, plus CI hardening at the Linux Foundation, including patching real injection risks.</p>
+        <h4>Work merged into security-critical projects</h4>
+        <p>Merged fixes in <a href="https://github.com/ceph/ceph/pull/67984">Ceph</a> and <a href="https://github.com/checkpoint-restore/criu/pull/2916">CRIU</a>, and CI hardening at the Linux Foundation, where I patched real shell-injection risks.</p>
       </div>
     </div>
+  </div>
+
+  <div class="closing">
+    <p><b>A note on scope.</b> These four areas are where I would start, not where I would stop. In the past nine months I went from C++ systems work to GPU inference at Lucebox to building a GitHub App for the Linux Foundation; I pick up new domains quickly and go where the roadmap needs me. Both my current commitments, the LFX mentorship and Lucebox, are going well. I am talking to Stash because this is the problem I want to work on next.</p>
   </div>
 
   <div class="footer"><span>Farzan Aman Khan · <a href="mailto:farzanaman99@gmail.com">farzanaman99@gmail.com</a> · <a href="https://github.com/cheese-cakee">github.com/cheese-cakee</a></span><span>3 / 3</span></div>
