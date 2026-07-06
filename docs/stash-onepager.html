@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stash — Market View &amp; Where I Fit</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --ink: #17221E;
+    --muted: #5A6A63;
+    --faint: #8A968F;
+    --accent: #0B7285;
+    --accent-soft: #E6F0F1;
+    --line: #D9E0DC;
+    --bg: #FFFFFF;
+    --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--serif); }
+
+  .page {
+    width: 210mm;
+    height: 296mm;
+    padding: 18mm 18mm 14mm;
+    page-break-after: always;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .page:last-child { page-break-after: avoid; }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4mm;
+  }
+  h1 {
+    font-family: var(--sans);
+    font-size: 23pt;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
+    margin-bottom: 3mm;
+  }
+  .byline {
+    font-family: var(--sans);
+    font-size: 9.5pt;
+    color: var(--muted);
+    margin-bottom: 9mm;
+  }
+  .byline b { color: var(--ink); font-weight: 600; }
+
+  h2 {
+    font-family: var(--sans);
+    font-size: 13.5pt;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    margin-bottom: 3.5mm;
+  }
+  p { font-size: 10.5pt; line-height: 1.55; margin-bottom: 3mm; }
+
+  .bigidea {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 5mm 6mm;
+    margin-bottom: 9mm;
+  }
+  .bigidea p {
+    font-size: 12pt;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .bigidea b { font-weight: 700; }
+
+  .fig-caption {
+    font-family: var(--sans);
+    font-size: 8.5pt;
+    color: var(--faint);
+    margin-top: 2.5mm;
+  }
+
+  .legend {
+    display: flex;
+    gap: 8mm;
+    margin-top: 4mm;
+    font-family: var(--sans);
+    font-size: 9pt;
+    color: var(--muted);
+  }
+  .legend span { display: flex; align-items: center; gap: 2mm; }
+  .dot { width: 3.2mm; height: 3.2mm; border-radius: 50%; display: inline-block; }
+
+  .footer {
+    margin-top: auto;
+    padding-top: 4mm;
+    border-top: 1px solid var(--line);
+    font-family: var(--sans);
+    font-size: 8.5pt;
+    color: var(--faint);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 9.5pt;
+    line-height: 1.45;
+    margin-bottom: 8mm;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 3mm 3.5mm;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+    border-bottom: 1.5px solid var(--ink);
+  }
+  thead th.stash { color: var(--accent); }
+  tbody th {
+    font-weight: 600;
+    color: var(--ink);
+    width: 34mm;
+    font-size: 9pt;
+  }
+  td.stash { background: var(--accent-soft); font-weight: 500; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+
+  .reasons { display: flex; flex-direction: column; gap: 4mm; }
+  .reason { display: flex; gap: 5mm; }
+  .reason .n {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13pt;
+    color: var(--accent);
+    min-width: 7mm;
+    line-height: 1.4;
+  }
+  .reason h3 {
+    font-family: var(--sans);
+    font-size: 10.5pt;
+    font-weight: 700;
+    margin-bottom: 1mm;
+  }
+  .reason p { font-size: 10pt; margin: 0; }
+
+  .map { display: flex; flex-direction: column; gap: 4mm; margin-bottom: 7mm; }
+  .maprow {
+    display: grid;
+    grid-template-columns: 1fr 12mm 1fr;
+    align-items: stretch;
+  }
+  .need, .proof {
+    border: 1px solid var(--line);
+    border-radius: 2.5mm;
+    padding: 4mm 4.5mm;
+  }
+  .need { background: #F6F8F7; }
+  .proof { background: var(--accent-soft); border-color: #BFD8DC; }
+  .need h4, .proof h4 {
+    font-family: var(--sans);
+    font-size: 9.5pt;
+    font-weight: 700;
+    margin-bottom: 1.2mm;
+  }
+  .need p, .proof p { font-size: 9pt; line-height: 1.5; margin: 0; color: var(--muted); }
+  .proof p { color: #23433F; }
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 13pt;
+    font-weight: 700;
+  }
+  .maplabel {
+    display: grid;
+    grid-template-columns: 1fr 12mm 1fr;
+    font-family: var(--sans);
+    font-size: 8pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 1mm;
+  }
+  .closing {
+    background: #F6F8F7;
+    border-radius: 2.5mm;
+    padding: 5mm 6mm;
+    margin-top: 2mm;
+  }
+  .closing p { margin: 0; font-size: 10.5pt; }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<div class="page">
+  <div class="eyebrow">Prepared for Fergana Labs</div>
+  <h1>Where Stash sits in the AI-memory market — and where I fit</h1>
+  <div class="byline"><b>Farzan Aman Khan</b> &nbsp;·&nbsp; github.com/cheese-cakee &nbsp;·&nbsp; July 2026</div>
+
+  <div class="bigidea">
+    <p><b>Supermemory and Mem0 sell memory technology to developers</b> — invisible plumbing inside someone else's app. <b>Stash gives whole teams a shared brain</b>: one knowledge base that people and AI agents read and write together. That is a different market, and the more valuable one.</p>
+  </div>
+
+  <h2>The market at a glance</h2>
+
+  <svg viewBox="0 0 640 430" width="100%" style="max-height:118mm" role="img" aria-label="Positioning map: Stash alone in the top-right quadrant">
+    <!-- quadrant shading top-right -->
+    <rect x="330" y="30" width="290" height="180" fill="#E6F0F1"/>
+    <!-- axes -->
+    <line x1="330" y1="20" x2="330" y2="400" stroke="#C4CFC8" stroke-width="1.5"/>
+    <line x1="30" y1="210" x2="630" y2="210" stroke="#C4CFC8" stroke-width="1.5"/>
+    <!-- axis labels -->
+    <text x="40" y="215" font-family="Helvetica, Arial" font-size="11" fill="#8A968F" dy="-8">Sold to developers</text>
+    <text x="620" y="215" font-family="Helvetica, Arial" font-size="11" fill="#8A968F" dy="-8" text-anchor="end">Used by whole teams</text>
+    <text x="336" y="400" font-family="Helvetica, Arial" font-size="11" fill="#8A968F">Memory only a machine can read</text>
+    <text x="336" y="34" font-family="Helvetica, Arial" font-size="11" fill="#8A968F">Knowledge people can open and edit</text>
+
+    <!-- Mem0 -->
+    <circle cx="150" cy="330" r="9" fill="#98A8A1"/>
+    <text x="150" y="358" font-family="Helvetica, Arial" font-size="13" font-weight="bold" fill="#17221E" text-anchor="middle">Mem0</text>
+    <text x="150" y="374" font-family="Helvetica, Arial" font-size="10.5" fill="#5A6A63" text-anchor="middle">open-source memory toolkit</text>
+
+    <!-- Supermemory -->
+    <circle cx="215" cy="270" r="9" fill="#98A8A1"/>
+    <text x="215" y="243" font-family="Helvetica, Arial" font-size="13" font-weight="bold" fill="#17221E" text-anchor="middle">Supermemory</text>
+    <text x="215" y="259" font-family="Helvetica, Arial" font-size="10.5" fill="#5A6A63" text-anchor="middle">managed memory service</text>
+
+    <!-- Stash -->
+    <circle cx="510" cy="105" r="13" fill="#0B7285"/>
+    <text x="510" y="80" font-family="Helvetica, Arial" font-size="15" font-weight="bold" fill="#0B7285" text-anchor="middle">Stash</text>
+    <text x="510" y="135" font-family="Helvetica, Arial" font-size="10.5" fill="#23433F" text-anchor="middle">shared workspace for teams</text>
+    <text x="510" y="150" font-family="Helvetica, Arial" font-size="10.5" fill="#23433F" text-anchor="middle">and their AI agents</text>
+  </svg>
+  <div class="fig-caption">Stash has the top-right quadrant to itself: team-wide knowledge, in a form humans can actually read.</div>
+
+  <p style="margin-top:6mm">Supermemory and Mem0 compete with each other — and with every AI lab that adds built-in memory to its models. Stash doesn't sit in that fight. It owns something none of them capture: <b>the working history of a team and its agents</b> — what was tried, what was decided, and why.</p>
+
+  <div class="footer"><span>Farzan Aman Khan · farzanaman99@gmail.com</span><span>1 / 3</span></div>
+</div>
+
+<!-- ============ PAGE 2 ============ -->
+<div class="page">
+  <h2>The comparison that matters</h2>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th class="stash">Stash</th>
+        <th>Supermemory</th>
+        <th>Mem0</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">What it really is</th>
+        <td class="stash">A shared workspace for teams and their AI agents</td>
+        <td>A memory service developers plug into their apps</td>
+        <td>An open-source memory toolkit for developers</td>
+      </tr>
+      <tr>
+        <th scope="row">Who pays for it</th>
+        <td class="stash">Companies whose engineers work with AI agents</td>
+        <td>App builders</td>
+        <td>App builders</td>
+      </tr>
+      <tr>
+        <th scope="row">What the memory looks like</th>
+        <td class="stash">Ordinary files and pages — anyone can open, check, and fix them</td>
+        <td>Machine-managed data; hard to inspect or correct</td>
+        <td>Machine-managed data; hard to inspect or correct</td>
+      </tr>
+      <tr>
+        <th scope="row">Whose memory it is</th>
+        <td class="stash">The whole team's, shared</td>
+        <td>One user at a time</td>
+        <td>One user at a time</td>
+      </tr>
+      <tr>
+        <th scope="row">Can it run inside company walls?</th>
+        <td class="stash">Yes — fully self-hosted, open source</td>
+        <td>Cloud-first</td>
+        <td>Partly; managed platform for the full product</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Three reasons the Stash approach wins</h2>
+  <div class="reasons">
+    <div class="reason">
+      <div class="n">1</div>
+      <div>
+        <h3>Agents already speak its language</h3>
+        <p>Stash presents itself as a filesystem — the thing coding agents use all day, every day. No new interface to learn, no integration project. Adoption friction is close to zero.</p>
+      </div>
+    </div>
+    <div class="reason">
+      <div class="n">2</div>
+      <div>
+        <h3>Memory you can open and fix</h3>
+        <p>When the other tools remember something wrong, nobody can see it — the error surfaces later, silently, in the AI's answers. In Stash a wrong memory is just a file: open it, correct it, done. For companies, that transparency is what makes AI memory trustworthy enough to buy.</p>
+      </div>
+    </div>
+    <div class="reason">
+      <div class="n">3</div>
+      <div>
+        <h3>It captures what nobody else does</h3>
+        <p>Stash records what a team's agents attempted, decided, and abandoned. The most expensive knowledge in any engineering team is <i>why the last attempt failed</i> — and Stash is the only product of the three that keeps it.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"><span>Farzan Aman Khan · farzanaman99@gmail.com</span><span>2 / 3</span></div>
+</div>
+
+<!-- ============ PAGE 3 ============ -->
+<div class="page">
+  <h2>Where I add value</h2>
+  <p style="margin-bottom:6mm">Four things Stash will need as it grows — each matched to work I have already shipped.</p>
+
+  <div class="maplabel"><span>What Stash needs</span><span></span><span>What I've already done</span></div>
+  <div class="map">
+    <div class="maprow">
+      <div class="need">
+        <h4>Keep secrets out of shared memory</h4>
+        <p>Agent transcripts carry passwords and API keys. Shared, searchable memory turns one leak into everyone's leak.</p>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="proof">
+        <h4>I built exactly that scanner</h4>
+        <p>Overtrust — my security tool that finds leaked secrets and credentials. I'd build the same protection into Stash's upload path.</p>
+      </div>
+    </div>
+    <div class="maprow">
+      <div class="need">
+        <h4>Stay fast as the knowledge base grows</h4>
+        <p>Search speed is the product. It has to hold up at 100× today's data.</p>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="proof">
+        <h4>Recent, proven performance work</h4>
+        <p>12 merged performance and reliability PRs at Lucebox (an AI inference startup) in the past few weeks, on caching and search-ranking quality.</p>
+      </div>
+    </div>
+    <div class="maprow">
+      <div class="need">
+        <h4>Win the self-hosting customer</h4>
+        <p>The companies that most need Stash are the ones that can't send data to a third-party cloud. Self-hosting has to feel effortless.</p>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="proof">
+        <h4>Infrastructure work at the Linux Foundation</h4>
+        <p>LFX mentee (selected 1 of 151); built and shipped developer tooling end to end. I'd start with your open issue #563 on self-hosted setups.</p>
+      </div>
+    </div>
+    <div class="maprow">
+      <div class="need">
+        <h4>Security that enterprise buyers trust</h4>
+        <p>Stash asks companies to store their most sensitive work product. Its own security posture is part of the pitch.</p>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="proof">
+        <h4>Security fixes merged into major projects</h4>
+        <p>Hardening work accepted into Ceph, CRIU, and Linux Foundation CI pipelines — including fixing real injection risks.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="closing">
+    <p><b>In short:</b> I've read your code, I know your open issues, and the problems ahead of you are the ones I've already been working on. Give me trial work and I'll show you, not tell you.</p>
+  </div>
+
+  <div class="footer"><span>Farzan Aman Khan · farzanaman99@gmail.com · github.com/cheese-cakee</span><span>3 / 3</span></div>
+</div>
+
+</body>
+</html>
